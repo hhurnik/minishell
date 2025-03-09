@@ -36,5 +36,5 @@ int builtin_cd(char *argv[])
     }
 
     // Success
-    return 0;
+    return (0);
 }

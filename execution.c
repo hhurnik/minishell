@@ -1,3 +1,26 @@
+//fork the parent process to create a child process, which will be execve()d in order to run a new process, new memory - for example "ls"
+
+// builtin command s execute within the shell process itself
+//historically - builtin commands were essential because they enabled the shell to interact efficiently with the environment (like changing directories or controlling job execution) without the overhead of creating separate processes.
+
+/*Since built-in commands interact with the shell’s environment (such as modifying shell variables or handling job control), they need to run within the same process as the shell to easily modify the shell's internal state.
+
+For example, cd changes the current directory of the shell, which is something that only the shell process itself can manage.
+exit terminates the shell process.
+echo prints directly to the terminal.
+These types of operations are best executed in the same process to minimize overhead and allow direct manipulation of the shell’s internal environment.
+*/
+
+//external functions like ls/cat - External Programs as Modular Utilities: External commands, like ls, cat, or grep, were intended to be separate programs with their own functionalities. The Unix philosophy emphasized modularity, where the shell itself is just the controller that interacts with various modular utilities. These utilities could be updated, replaced, and used across different programs and users.
+//These external commands had their own development and optimization processes, whereas built-ins were created specifically for fast interactions within the shell environment.
+/*External programs are independent executables that exist outside the shell. These commands are not aware of the shell’s internal environment by default, so running them involves creating a new process using fork() to execute the command in isolation.
+
+After forking, the shell uses execve() to replace the child process's image with the external command's program.
+This process separates the shell's environment from the environment of the external program.
+This approach follows the Unix principle of process isolation where each process is self-contained and interacts with others only through defined interfaces (like stdin, stdout, stderr, and files).
+*/
+
+
 int execute_builtin(t_cmd *cmd, t_shell *shell)
 {
     if (!cmd->args || !cmd->args[0])
@@ -10,8 +33,6 @@ int execute_builtin(t_cmd *cmd, t_shell *shell)
     
     return (1);
 }
-
-
 
 
 
