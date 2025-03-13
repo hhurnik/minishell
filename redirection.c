@@ -20,64 +20,161 @@
 /*fork() is used to create a new child process that is a copy of the current process 
 (the parent process). After fork(), you will have two processes running: the parent process 
 (which is the shell) and the child process (which will execute the command).*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <fcntl.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
-extern char **environ;  // To access environment variables
+extern char **environ;
 
-// Function to find the full path of a command in the directories listed in PATH
-char *find_command_in_path(const char *cmd) 
+// Function to handle redirections for input/output
+int handle_redirection(char *infile, char *outfile, int append) 
 {
-    char *path = getenv("PATH");
-    if (!path) return NULL;
+    int fd;
 
-    char *path_copy = strdup(path);
-    char *dir = strtok(path_copy, ":");
-    while (dir) 
+    // Input redirection (<)
+    if (infile) 
     {
-        char *full_cmd = malloc(strlen(dir) + strlen(cmd) + 2);
-        if (!full_cmd) 
+        fd = open(infile, O_RDONLY);
+        if (fd == -1) 
         {
-            free(path_copy);
-            return NULL;
+            perror("minishell");
+            return (-1);
         }
-        sprintf(full_cmd, "%s/%s", dir, cmd);
-
-        // Check if the command is executable
-        if (access(full_cmd, X_OK) == 0) 
+        if (dup2(fd, STDIN_FILENO) == -1) 
         {
-            free(path_copy);
-            return full_cmd;
+            perror("minishell");
+            close(fd);
+            return (-1);
         }
-
-        free(full_cmd);
-        dir = strtok(NULL, ":");
+        close(fd);
     }
 
-    free(path_copy);
-    return NULL;  // Command not found
+    // Output redirection (>)
+    if (outfile) 
+    {
+        if (append) 
+        {
+            // Output append (>>)
+            fd = open(outfile, O_WRONLY | O_CREAT | O_APPEND, 0644);
+        } 
+        else 
+        {
+            // Output overwrite (>)
+            fd = open(outfile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        }
+        if (fd == -1) 
+        {
+            perror("minishell");
+            return (-1);
+        }
+        if (dup2(fd, STDOUT_FILENO) == -1) 
+        {
+            perror("minishell");
+            close(fd);
+            return (-1);
+        }
+        close(fd);
+    }
+
+    return (0);
 }
 
-// Function to execute an external command
-void execute_command(char *cmd) 
+// Function to handle heredoc redirection (<<)
+int handle_heredoc(char *delimiter) 
 {
-    char *cmd_path = find_command_in_path(cmd);
-    if (!cmd_path) {
-        fprintf(stderr, "minishell: command not found: %s\n", cmd);
-        return;
+    int pipefds[2];
+    pid_t pid;
+
+    // Create a pipe
+    if (pipe(pipefds) == -1) 
+    {
+        perror("minishell");
+        return -1;
     }
 
+    pid = fork();
+    if (pid == 0) 
+    {
+        // Child process: read lines from stdin until delimiter is encountered
+        char *line = NULL;
+        size_t len = 0;
+
+        close(pipefds[0]);  // Close read end of pipe
+
+        while (1) 
+        {
+            printf("heredoc> ");
+            getline(&line, &len, stdin);
+
+            // Check if the line matches the delimiter
+            if (strncmp(line, delimiter, strlen(delimiter)) == 0) 
+            {
+                free(line);
+                break;  // Exit the heredoc loop
+            }
+
+            // Write the line to the pipe
+            write(pipefds[1], line, strlen(line));
+        }
+
+        close(pipefds[1]);  // Close write end of pipe
+        exit(0);
+    } 
+    else if (pid > 0) 
+    {
+        // Parent process: redirect stdin to pipe and wait for child
+        close(pipefds[1]);  // Close write end of pipe
+
+        if (dup2(pipefds[0], STDIN_FILENO) == -1) 
+        {
+            perror("minishell");
+            close(pipefds[0]);
+            return (-1);
+        }
+        close(pipefds[0]);  // Close read end of pipe after redirecting
+
+        waitpid(pid, NULL, 0);  // Wait for the heredoc child to finish
+    } 
+    else 
+    {
+        perror("fork failed");
+        return (-1);
+    }
+
+    return 0;
+}
+
+// Function to execute the command with redirection
+void execute_command_with_redirection(char *cmd, char *infile, char *outfile, int append, char *delimiter) 
+{
     pid_t pid = fork();
-    if (pid == 0) {
+    if (pid == 0) 
+    {
         // Child process
+
+        // Handle heredoc redirection
+        if (delimiter) 
+        {
+            if (handle_heredoc(delimiter) == -1) 
+            {
+                exit(1);
+            }
+        }
+
+        // Handle input and output redirection
+        if (handle_redirection(infile, outfile, append) == -1) 
+        {
+            exit(1);
+        }
+
+        // Now execute the command
         char *args[] = {cmd, NULL};
-        execve(cmd_path, args, environ);  // Execute the command
+        execve(cmd, args, environ);
 
         // If execve fails
         perror("execve failed");
@@ -93,39 +190,19 @@ void execute_command(char *cmd)
     {
         perror("fork failed");
     }
-
-    free(cmd_path);  // Free the path memory after use
 }
 
-// Main function with the shell loop
+// Main function for testing
 int main() 
 {
-    char *input;
+    char *cmd = "echo";  // Example command
+    char *infile = "input.txt";  // Example input redirection file
+    char *outfile = "output.txt";  // Example output redirection file
+    char *delimiter = "END";  // Example heredoc delimiter
+    int append = 0;  // Use 1 for append (>>), 0 for overwrite (>)
 
-    // Infinite loop for the shell prompt
-    while (1) 
-    {
-        // Display prompt and read input using readline
-        input = readline("minishell> ");
-        if (!input) break;  // Exit the loop if input is NULL (Ctrl+D)
+    // Run the command with redirection
+    execute_command_with_redirection(cmd, infile, outfile, append, delimiter);
 
-        if (*input) 
-        {
-            add_history(input);  // Add the input to the history
-
-            // Check if it's a built-in command (only "exit" for simplicity)
-            if (strncmp(input, "exit", 4) == 0) 
-            {
-                free(input);
-                break;  // Exit the shell
-            }
-
-            // Otherwise, execute as an external command
-            execute_command(input);
-        }
-
-        free(input);  // Free the input after processing
-    }
-
-    return 0;
+    return (0);
 }
