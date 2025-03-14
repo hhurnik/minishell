@@ -16,8 +16,9 @@ LANG=en_US.UTF-8*/
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include "ms.h"
 
-int builtin_env(char *argv[]) 
+int bi_env(char *argv[]) 
 {
     // are there args after env?
     if (argv[1] != NULL) 
@@ -32,9 +33,9 @@ int builtin_env(char *argv[])
     // Print all environment variables until we reach the end
     while (env_var != NULL) 
     {
-        write(1, env_var, strlen(env_var));  // Print the environment variable value
+        write(1, env_var, ft_strlen(env_var));  // Print the environment variable value
         write(1, "\n", 1);                    // Print a newline after each variable
         env_var = getenv("NEXT_ENV_VAR");   // Get the next environment variable
     }
-    return 0;
+    return (0);
 }

@@ -9,9 +9,10 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include "ms.h"
 
 //bedziemy miec w mainie
-char **copy_env(char **envp)
+char **copy_env(char *envp[])
 {
     int i = 0;
     char **env;
@@ -21,10 +22,15 @@ char **copy_env(char **envp)
 
     env = malloc(sizeof(char *) * (i + 1));
     if (!env)
-        return NULL;
+        return (NULL);
 
-    for (i = 0; envp[i]; i++)
-        env[i] = strdup(envp[i]);  // duplicate each string
+
+    
+    while (envp[i]) 
+    {
+        env[i] = ft_strdup(envp[i]);
+        i++;
+    }
 
     env[i] = NULL;
     return (env);
@@ -33,17 +39,18 @@ char **copy_env(char **envp)
 void remove_env_var(char *varname, char **env) 
 {
     int i = 0;
-    int len = strlen(varname);
+    int len = ft_strlen(varname);
 
     while (env[i]) 
     {
         // Match varname and make sure it ends with '='
-        if (strncmp(env[i], varname, len) == 0 && env[i][len] == '=') 
+        if (ft_strncmp(env[i], varname, len) == 0 && env[i][len] == '=') 
         {
             free(env[i]);
 
             // Shift all remaining entries up
-            while (env[i + 1]) {
+            while (env[i + 1]) 
+            {
                 env[i] = env[i + 1];
                 i++;
             }
@@ -58,7 +65,8 @@ void ft_unset(char **argv, char **env)
 {
     int i = 1;
 
-    while (argv[i]) {
+    while (argv[i]) 
+    {
         // Optional: validate variable name here (skip invalid names)
         remove_env_var(argv[i], env);
         i++;

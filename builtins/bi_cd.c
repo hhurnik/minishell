@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 //jesli samo cd - go to the home directory
-int builtin_cd(char *argv[]) 
+int bi_cd(char *argv[]) 
 {
     // If no arguments, change to the home directory
     if (argv[1] == NULL) 

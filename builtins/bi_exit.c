@@ -1,7 +1,8 @@
 #include <unistd.h>
 #include <stdlib.h>
+#include "ms.h"
 
-int builtin_exit(char *argv[])
+int bi_exit(char *argv[])
 {
     // są argumenty?
     if (argv[1] != NULL)

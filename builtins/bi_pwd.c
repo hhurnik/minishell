@@ -4,18 +4,18 @@
 #include <string.h>
 #include <errno.h>
 
-int builtin_pwd(char *argv[]) 
+int bi_pwd(char *argv[]) 
 {
-    // Check if there are any arguments (pwd with no options)
+    
+    // nie moze byc argumentow - with no options
     if (argv[1] != NULL) 
     {
-        // If there are arguments, print an error (pwd doesn't take options)
         perror("pwd: no arguments are allowed");
         return (1);
     }
 
     // Allocate a buffer to store the current working directory
-    char *cwd = malloc(1024); // Or any other buffer size ????
+    char *cwd = malloc(1024); // how big - buffer size ????
     if (!cwd) 
     {
         perror("malloc failed");
@@ -23,7 +23,9 @@ int builtin_pwd(char *argv[])
     }
 
     // Get the current working directory
-    //getcwd - kopiuje an absolute pathname of the current working directory to the array pointed to by buf, which is of length size.
+    //getcwd - kopiuje an absolute pathname of the current working directory to the array 
+    // pointed to by buf, which is of length size.
+    
     if (getcwd(cwd, 1024) == NULL)  
     {
         // If getcwd fails, print an error message
@@ -33,8 +35,8 @@ int builtin_pwd(char *argv[])
     }
 
     // Print the current working directory
-    write(1, cwd, strlen(cwd));
-    write(1, "\n", 1); // Add a newline at the end - wróc prompta
+    write(1, cwd, ft_strlen(cwd));
+    write(1, "\n", 1); // Add a newline at the end - zwróc prompta
 
     free(cwd);
     return (0);
