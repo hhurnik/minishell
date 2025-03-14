@@ -20,6 +20,53 @@
 /*fork() is used to create a new child process that is a copy of the current process 
 (the parent process). After fork(), you will have two processes running: the parent process 
 (which is the shell) and the child process (which will execute the command).*/
+
+// echo accepts only parameters, cat accepts anything from the stdin
+// echo -display the line of text
+// cat - concatenate files and print on the stdout
+
+
+// data in entered via stdin (keyboard ususally)
+// the resulting output goes to stdout (usually the shell) --> these are called streams
+
+//it;s possible to alter these input and ouput locations - the computer then gets
+// information from somewhere else than stdin or send the results somewhere 
+// other than stdout - this is called redirection
+
+
+//  ------- https://www.redhat.com/en/blog/redirect-operators-bash
+
+// REGULAR OUTPUT > OPERATOR       the output redirector overwrites any existing data in the file -- easy to accidentally
+// overwrite existing information
+
+// REGULAR OUTPUT APPEND >> OPERATOR
+// The append >> operator adds the output to 
+// the existing content instead of overwriting it
+
+// REGULAR INPUT < OPERATOR
+// the input redirector pulls data in a stream from a given source
+// data can be pulled from another source, such as a file
+
+/*sort < mylist.txt 
+cat
+cow
+dog
+horse*/
+
+// << is known as here-document structure.
+/*You let the program know what will be the ending text, and whenever that 
+delimiter is seen, the program will read all the stuff you've given to the program 
+as input and perform a task upon it.*/
+
+/*$ wc << EOF
+> one two three
+> four five
+> EOF
+ 2  5 24
+In this example we tell wc program to wait for EOF string, then type in five words, 
+and then type in EOF to signal that we're done giving input.*/
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,6 +75,8 @@
 #include <fcntl.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+
+#include "ms.h"
 
 extern char **environ;
 

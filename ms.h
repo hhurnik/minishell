@@ -30,4 +30,9 @@ void remove_env_var(char *varname, char **env);
 void ft_unset(char **argv, char **env);
 
 
+// redirection
+int handle_redirection(char *infile, char *outfile, int append);
+int handle_heredoc(char *delimiter);
+void execute_command_with_redirection(char *cmd, char *infile, char *outfile, int append, char *delimiter);
+
 #endif
