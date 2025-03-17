@@ -15,6 +15,12 @@ typedef struct s_cmd
 // The last command reads from the last pipe, and outputs to stdout
 // Any middle command reads from previous pipe and writes to next
 
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 // Helper to count commands
 int	count_commands(char **commands)
