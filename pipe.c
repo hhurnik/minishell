@@ -15,20 +15,6 @@ typedef struct s_cmd
 // The last command reads from the last pipe, and outputs to stdout
 // Any middle command reads from previous pipe and writes to next
 
-void	ft_pipeline(int pipefd[2])
-{
-	dup2(int oldfd, int newfd); // <- the use
-}
-
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/wait.h>
-#include <unistd.h>
-
-// Mock environment if not available
-extern char	**environ;
 
 // Helper to count commands
 int	count_commands(char **commands)
