@@ -23,7 +23,9 @@ typedef struct s_cmd
 -execve() each command using cmd->args
 -Wait for all children at the end
 */
-
+//pipe - one way communication channel between processes 
+// fds are not tied to the processes, but to resources that a process is using
+// a file, directory, pipe, socket, terminal, device
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,38 +36,44 @@ typedef struct s_cmd
 
 extern char **environ;
 
+// one node = one command
 typedef struct s_cmd
 {
     char **args;
-    // Assume you will handle redirs later if needed
+    // handle redirs later
     struct s_cmd *next;
 } t_cmd;
 
 void execute_pipeline(t_cmd *cmd_list)
 {
-    int prev_fd = -1;         // For previous pipe's read end
+    int prev_fd = -1;         // For previous pipe's read end - initially none
     int pipefd[2];            // pipefd[0] = read, pipefd[1] = write
     pid_t pid;
 
+    // przejsc przez kazdy argument listy
     while (cmd_list)
     {
         // Create pipe only if there’s a next command
         if (cmd_list->next)
         {
-            if (pipe(pipefd) == -1)
+            // returns -1 on error - failed to create pipe, 0 on success
+            // (system out of fd/ process has too many open fd/kernel resources are exhausted/ invalid memory for pipefd array)
+            if (pipe(pipefd) == -1) 
             {
                 perror("pipe");
-                exit(EXIT_FAILURE);
+                exit(EXIT_FAILURE); //exit(1);
             }
         }
 
+        // fork a child process to run the command
         pid = fork();
         if (pid < 0)
         {
             perror("fork");
             exit(EXIT_FAILURE);
         }
-
+        
+        //child process
         if (pid == 0)
         {
             // === CHILD PROCESS ===
