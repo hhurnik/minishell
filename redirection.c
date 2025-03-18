@@ -75,7 +75,6 @@ and then type in EOF to signal that we're done giving input.*/
 #include <fcntl.h>
 #include <readline/readline.h>
 #include <readline/history.h>
-
 #include "ms.h"
 
 extern char **environ;
@@ -161,7 +160,7 @@ int handle_heredoc(char *delimiter)
             getline(&line, &len, stdin);
 
             // Check if the line matches the delimiter
-            if (strncmp(line, delimiter, strlen(delimiter)) == 0) 
+            if (strncmp(line, delimiter, ft_strlen(delimiter)) == 0) 
             {
                 free(line);
                 break;  // Exit the heredoc loop

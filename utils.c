@@ -48,3 +48,30 @@ int ft_strncmp(char *s1, char *s2, unsigned int n)
 
     return (s1[i] - s2[i]);
 }
+
+
+
+//bedziemy miec w mainie
+char **copy_env(char *envp[])
+{
+    int i = 0;
+    char **env;
+
+    while (envp[i])
+        i++;
+
+    env = malloc(sizeof(char *) * (i + 1));
+    if (!env)
+        return (NULL);
+
+
+    
+    while (envp[i]) 
+    {
+        env[i] = ft_strdup(envp[i]);
+        i++;
+    }
+
+    env[i] = NULL;
+    return (env);
+}

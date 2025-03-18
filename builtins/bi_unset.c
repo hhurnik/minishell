@@ -11,31 +11,6 @@
 #include <string.h>
 #include "ms.h"
 
-//bedziemy miec w mainie
-char **copy_env(char *envp[])
-{
-    int i = 0;
-    char **env;
-
-    while (envp[i])
-        i++;
-
-    env = malloc(sizeof(char *) * (i + 1));
-    if (!env)
-        return (NULL);
-
-
-    
-    while (envp[i]) 
-    {
-        env[i] = ft_strdup(envp[i]);
-        i++;
-    }
-
-    env[i] = NULL;
-    return (env);
-}
-
 void remove_env_var(char *varname, char **env) 
 {
     int i = 0;
