@@ -1,11 +1,11 @@
 #include "ms.h"
 
-typedef struct s_cmd
-{
-    char **args;
-    t_redir *redirs;
-    struct s_cmd *next;
-} t_cmd
+// typedef struct s_cmd
+// {
+//     char **args;
+//     t_redir *redirs;
+//     struct s_cmd *next;
+// } t_cmd
 
 
 // pipe(int pipefd[2]) - pipefd[0]: Read end, pipefd[1]: Write end
@@ -142,7 +142,36 @@ void execute_pipeline(t_cmd *cmd_list)
 
 
 
+// zasymuluj: echo hello.txt | grep txt
 
+int main(void)
+{
+    // echo hello.txt
+    t_cmd *cmd1 = malloc(sizeof(t_cmd));
+    cmd1->args = malloc(sizeof(char *) * 3);
+    cmd1->args[0] = strdup("/bin/echo");
+    cmd1->args[1] = strdup("hello.txt");
+    cmd1->args[2] = NULL;
+    cmd1->next = NULL;
+
+    // grep txt
+    t_cmd *cmd2 = malloc(sizeof(t_cmd));
+    cmd2->args = malloc(sizeof(char *) * 3);
+    cmd2->args[0] = strdup("/usr/bin/grep");
+    cmd2->args[1] = strdup("txt");
+    cmd2->args[2] = NULL;
+    cmd2->next = NULL;
+
+    cmd1->next = cmd2;
+
+    execute_pipeline(cmd1);
+
+    // cleanup
+    free(cmd1->args[0]); free(cmd1->args[1]); free(cmd1->args); free(cmd1);
+    free(cmd2->args[0]); free(cmd2->args[1]); free(cmd2->args); free(cmd2);
+
+    return 0;
+}
 
 
 
