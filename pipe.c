@@ -65,15 +65,14 @@ void execute_pipeline(t_cmd *cmd_list)
             }
         }
 
-        // fork a child process to run the command
+        // fork a child process to run the
         pid = fork();
         if (pid < 0)
         {
             perror("fork");
             exit(EXIT_FAILURE);
         }
-        
-        //child process
+
         if (pid == 0)
         {
             // === CHILD PROCESS ===
@@ -81,6 +80,7 @@ void execute_pipeline(t_cmd *cmd_list)
             // If not the first command, connect stdin to prev_fd
             if (prev_fd != -1)
             {
+                //// Replace stdin with prev_fd
                 if (dup2(prev_fd, STDIN_FILENO) == -1)
                 {
                     perror("dup2 prev_fd");
