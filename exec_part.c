@@ -4,6 +4,8 @@
 // 3. Use execve() for external commands.
 // 4. Call the builtin handler if it's a builtin.
 
+//TYLKO NOTATKI
+
 // zwrocone struktury
 typedef struct s_redir 
 {
