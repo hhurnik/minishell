@@ -35,6 +35,10 @@ int is_builtin(char *cmd)
 //     return (0);
 // }
 
+
+// przed tym 
+// if (!cmd->args || !cmd->args[0])
+//         return 0;   - funkcja nadrzedna od execute_builtin
 int execute_builtin(char **args, char **env)
 {
     //char **env; //skads to wiać - global? cy prekazana jako argument?
