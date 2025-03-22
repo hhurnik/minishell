@@ -14,28 +14,30 @@ int is_builtin(char *cmd)
         return (0);
 }
 
-int execute_builtin(char **args)
-{
-    if (!strcmp(args[0], "echo"))
-        return ft_echo(args);
-    else if (!strcmp(args[0], "cd"))
-        return ft_cd(args);
-    else if (!strcmp(args[0], "pwd"))
-        return ft_pwd(args);
-    else if (!strcmp(args[0], "export"))
-        return ft_export(args);
-    else if (!strcmp(args[0], "unset"))
-        return ft_unset(args);
-    else if (!strcmp(args[0], "env"))
-        return ft_env(args);
-    else if (!strcmp(args[0], "exit"))
-        return ft_exit(args);
-    return (0);
-}
+/////krotsa version
 
-int execute_builtin(char **args)
+// int execute_builtin(char **args)
+// {
+//     if (!strcmp(args[0], "echo"))
+//         return ft_echo(args);
+//     else if (!strcmp(args[0], "cd"))
+//         return ft_cd(args);
+//     else if (!strcmp(args[0], "pwd"))
+//         return ft_pwd(args);
+//     else if (!strcmp(args[0], "export"))
+//         return ft_export(args);
+//     else if (!strcmp(args[0], "unset"))
+//         return ft_unset(args);
+//     else if (!strcmp(args[0], "env"))
+//         return ft_env(args);
+//     else if (!strcmp(args[0], "exit"))
+//         return ft_exit(args);
+//     return (0);
+// }
+
+int execute_builtin(char **args, char **env)
 {
-    char **env; //skads to wiać
+    //char **env; //skads to wiać - global? cy prekazana jako argument?
     if (is_builtin == 1)
     {
         if (!strcmp(args[0], "echo"))
