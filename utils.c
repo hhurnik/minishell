@@ -27,6 +27,31 @@ int is_integer(char *str)
     return (1);
 }
 
+int ft_atoi(const char *str) 
+{
+    int result = 0;
+    int sign = 1;
+    
+    // Handle optional leading '+' or '-'
+    if (*str == '-') 
+    {
+        sign = -1;
+        str++;
+    } 
+    else if (*str == '+') 
+    {
+        str++;
+    }
+    
+    // Convert string to integer
+    while (*str >= '0' && *str <= '9') {
+        result = result * 10 + (*str - '0');
+        str++;
+    }
+    
+    return result * sign;
+}
+
 char *ft_strdup(const char *s)
 {
     char *str;
