@@ -17,7 +17,8 @@ int bi_echo(char *argv[])
     int newline = 1; // domyślnie wypisujemy nową linię na koncu
 
     // Obsługa -n (może być kilka, tak dziala echo -n w bashu: -n, -nnnn)
-    if (argv[i] && ft_strncmp(argv[i], "-n", 2) == 0)
+    // akceptuje -n -n -nnn -nnn  "something" - wypisuje tylko somehtign
+    while (argv[i] && ft_strncmp(argv[i], "-n", 2) == 0)
     {
         int j = 2;
         while (argv[i][j] == 'n')
@@ -27,7 +28,10 @@ int bi_echo(char *argv[])
             newline = 0;
             i++;
         }
+        else
+            break;
     }
+
 
     // Wypisz argumenty oddzielone spacją
     while (argv[i])
@@ -46,13 +50,16 @@ int bi_echo(char *argv[])
 
 int main(int argc, char *argv[]) 
 {
-    if (argc == 1) {
+    if (argc == 1) 
+    {
         // No arguments passed, so we just print an empty line
         write(1, "\n", 1);
-    } else {
+    } 
+    else 
+    {
         // Call the echo function with the arguments from the command line
         bi_echo(argv);
     }
     
-    return 0;
+    return (0);
 }
