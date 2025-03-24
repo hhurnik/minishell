@@ -12,7 +12,7 @@
 #include <readline/history.h>
 
 //utils
-int ft_strlen(char *str);
+int ft_strlen(const char *str);
 char *ft_strdup(const char *s);
 int ft_strncmp(char *s1, char *s2, unsigned int n);
 char **copy_env(char *envp[]);

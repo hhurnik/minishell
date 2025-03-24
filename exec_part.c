@@ -6,6 +6,14 @@
 
 //TYLKO NOTATKI
 
+///// eval
+// cat | cat | cat | ls  - po trzech enterach dopiero zwrot prompta, bo zamykam file descriptory
+
+// nawet gdy nie obsluguje sie options, to argumenty trzeba 
+
+// nawet jesli brak argumentu, to trzeba redirection obsluzyc
+
+
 // zwrocone struktury
 typedef struct s_redir 
 {

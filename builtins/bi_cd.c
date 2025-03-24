@@ -41,7 +41,8 @@ int main(int argc, char *argv[])
 {
     //before changing
     char *cwd = getcwd(NULL, 0);
-    if (cwd != NULL) {
+    if (cwd != NULL) 
+    {
         printf("Before cd: %s\n", cwd);
         free(cwd);
     }
@@ -50,7 +51,8 @@ int main(int argc, char *argv[])
 
     //afer
     cwd = getcwd(NULL, 0);
-    if (cwd != NULL) {
+    if (cwd != NULL) 
+    {
         printf("After cd: %s\n", cwd);
         free(cwd);
     }
