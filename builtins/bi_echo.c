@@ -13,7 +13,7 @@
 
 int bi_echo(char *argv[])
 {
-    int i = 1;
+    int i = 1; // bez argumentow i tak wypisze \n
     int newline = 1; // domyślnie wypisujemy nową linię na koncu
 
     // Obsługa -n (może być kilka, tak dziala echo -n w bashu: -n, -nnnn)

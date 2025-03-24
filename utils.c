@@ -10,6 +10,23 @@ int ft_strlen(const char *str)
     return (i);
 }
 
+int is_integer(char *str)
+{
+    int i = 0;
+
+    if (str[i] == '-' || str[i] == '+')
+        i++;
+
+    while (str[i])
+    {
+        if (str[i] < '0' || str[i] > '9')
+            return (0);
+        i++;
+    }
+
+    return (1);
+}
+
 char *ft_strdup(const char *s)
 {
     char *str;
