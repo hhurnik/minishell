@@ -16,6 +16,7 @@ int ft_strlen(const char *str);
 char *ft_strdup(const char *s);
 int ft_strncmp(char *s1, char *s2, unsigned int n);
 char **copy_env(char *envp[]);
+int ft_atoi(const char *str);
 
 
 // builtins
