@@ -2,12 +2,12 @@
 
 int g_exit_status = 0;  // Globalna zmienna stanu
 
-void run_builtin(t_cmd *cmd, t_env **env) {
-    if (ft_strcmp(cmd->args[0], "cd") == 0) {
-        g_exit_status = ft_cd(cmd->args, env);
-    }
-    // Dodaj inne builtiny
-}
+// void run_builtin(t_cmd *cmd, t_env **env) {
+//     if (ft_strcmp(cmd->args[0], "cd") == 0) {
+//         g_exit_status = ft_cd(cmd->args, env);
+//     }
+//     // Dodaj inne builtiny
+// }
 
 char **env_to_arr(t_env *env) {
     if (!env) return NULL; // Zabezpieczenie przed NULL-em

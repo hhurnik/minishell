@@ -22,9 +22,9 @@ int ft_cd(char **args, t_env **env) {
 }
 
 // Lista wbudowanych komend
-int is_builtin(char *cmd) 
-{
-    return (ft_strcmp(cmd, "cd") == 0 ||
-           ft_strcmp(cmd, "echo") == 0 ||
-           ft_strcmp(cmd, "exit") == 0);
-}
+// int is_builtin(char *cmd) 
+// {
+//     return (ft_strcmp(cmd, "cd") == 0 ||
+//            ft_strcmp(cmd, "echo") == 0 ||
+//            ft_strcmp(cmd, "exit") == 0);
+// }

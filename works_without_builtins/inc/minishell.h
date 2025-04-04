@@ -125,4 +125,27 @@ void            handle_sigint(int sig);
 // Main
 int             main(int argc, char **argv, char **envp);
 
+
+
+//builtins Hon
+int bi_cd(char **args, t_env **env);
+int bi_echo(char *argv[]);
+int bi_env(char *argv[]);
+
+void write_stderr(char *str);
+int is_integer(char *str);
+int bi_exit(char *argv[]);
+
+size_t env_len(t_env *env);
+int bi_export(t_env **env);
+
+int bi_pwd(char *argv[]);
+
+int env_cmpr(t_env *env, char *varname);
+void remove_env_var(char *varname, t_env **env);
+int bi_unset(char **argv, t_env **env);
+
+
+
+
 #endif

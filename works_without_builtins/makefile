@@ -3,7 +3,7 @@ CC					= gcc -Wall -Werror -Wextra -I
 LIBFT 				= libft/libft.a
 RL_FLAGS 			= -lreadline 
 INC					= inc/
-SRCS 				= *.c
+SRCS 				= *.c builtins/*.c
 
 start:
 					@make all

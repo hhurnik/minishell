@@ -3,26 +3,32 @@
 /**
  * Wykonuje komendy, obsługuje potoki i redirekcje.
  */
-void execute(t_cmd *cmds, t_env **env) {
+void execute(t_cmd *cmds, t_env **env) 
+{
     int stdin_copy = dup(STDIN_FILENO);
     int stdout_copy = dup(STDOUT_FILENO);
 
-    while (cmds) {
+    while (cmds) 
+    {
         // Potoki
-        if (cmds->next) {
+        if (cmds->next) 
             pipe(cmds->pipe_fd);
-        }
+
         // Forkuj dla każdej komendy
         pid_t pid = fork();
-        if (pid == 0) {
+        if (pid == 0) 
+        {
             handle_redirections(cmds); // Przekieruj wejście/wyjście
-            if (is_builtin(cmds->args[0])) {
+            if (is_builtin(cmds->args[0])) 
+            {
                 run_builtin(cmds, env); // Wbudowane komendy (np. cd)
                 exit(g_exit_status);
-            } else {
+            } 
+            else 
                 execve(get_exec_path(cmds->args[0], *env), cmds->args, env_to_arr(*env));
-            }
-        } else {
+        } 
+        else 
+        {
             waitpid(pid, &g_exit_status, 0); // Czekaj na dziecko
             close_pipes(cmds); // Zamknij nieużywane pipe'y
         }
