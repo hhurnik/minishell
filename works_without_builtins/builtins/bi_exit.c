@@ -3,90 +3,86 @@
 /*                                                        :::      ::::::::   */
 /*   bi_exit.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: hhurnik <hhurnik@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/24 20:19:34 by hhurnik           #+#    #+#             */
-/*   Updated: 2025/04/05 00:29:34 by marvin           ###   ########.fr       */
+/*   Updated: 2025/04/07 20:33:34 by hhurnik          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../inc/minishell.h"
 
-//exit with no options
+// exit with no options
 
 // but with possible arguments?
-// If exit is called with no argument, the shell or program should terminate with an exit status of 0.
+// If exit is called with no argument,
+//	the shell or program should terminate with an exit status of 0.
 
-//If exit is called with an argument, this argument will be treated as the exit status code.
-//argument should be an int, the shell should exit with this status
+// If exit is called with an argument,
+//	this argument will be treated as the exit status code.
+// argument should be an int, the shell should exit with this status
 
 // exit status code is an integer from 0 to 255, unsigned
-// jesli aru=gumentem bedzie ujemna liczba, system zamieni je na unsigned przy uzyciu modulo
+// jesli aru=gumentem bedzie ujemna liczba,
+//	system zamieni je na unsigned przy uzyciu modulo
 
+// Since m is a string and not a number,
+//	Bash will not throw an error for the invalid argument, but instead,
+// it will treat the string m as a non-numeric value,
+//	which Bash interprets as 0.
 
-//Since m is a string and not a number, Bash will not throw an error for the invalid argument, but instead, 
-//it will treat the string m as a non-numeric value, which Bash interprets as 0.
-
-
-void write_stderr(char *str)
+void	write_stderr(char *str)
 {
-    write(2, str, ft_strlen(str));
+	write(2, str, ft_strlen(str));
 }
 
-int is_integer(char *str)
+int	is_integer(char *str)
 {
-    int i = 0;
+	int	i;
 
-    if (str[i] == '-' || str[i] == '+')
-        i++;
-
-    while (str[i])
-    {
-        if (str[i] < '0' || str[i] > '9')
-            return (0);
-        i++;
-    }
-
-    return (1);
+	i = 0;
+	if (str[i] == '-' || str[i] == '+')
+		i++;
+	while (str[i])
+	{
+		if (str[i] < '0' || str[i] > '9')
+			return (0);
+		i++;
+	}
+	return (1);
 }
 
-int bi_exit(char *argv[])
+int	bi_exit(char *argv[])
 {
-    int exit_code;
+	int	exit_code;
 
-    // jesli wiecej niz 1 argument, to nie wychodzi z shella - zwraca 1
-    if (argv[2])
-    {
-        write_stderr("exit: too many arguments\n");
-        //nie wychodzi, wiec nie exit tylko return 
-        return (1);
-    }
-
-
-    //jesli jest argument za exit
-    if (argv[1])
-    {
-        if(is_integer(argv[1]))
-        {
-            exit_code = ft_atoi(argv[1]);
-
-            if (exit_code < 0)
-                exit_code = ((exit_code % 256) + 256) % 256; // zeby nigdy nie byl negative
-
-            exit(exit_code);
-        }
-
-        else
-        {
-            write_stderr("exit: numeric argument required\n");
-            //moj bash tu i tak wykonuje exit(2)
-            exit(2);
-        }
-    }
-    else
-        exit(0);
+	// jesli wiecej niz 1 argument, to nie wychodzi z shella - zwraca 1
+	if (argv[2])
+	{
+		write_stderr("exit: too many arguments\n");
+		// nie wychodzi, wiec nie exit tylko return (return (1));
+	}
+	// jesli jest argument za exit
+	if (argv[1])
+	{
+		if (is_integer(argv[1]))
+		{
+			exit_code = ft_atoi(argv[1]);
+			if (exit_code < 0)
+				exit_code = ((exit_code % 256) + 256) % 256;
+					// zeby nigdy nie byl negative
+			exit(exit_code);
+		}
+		else
+		{
+			write_stderr("exit: numeric argument required\n");
+			// moj bash tu i tak wykonuje exit(2)
+			exit(2);
+		}
+	}
+	else
+		exit(0);
 }
-
 
 // int main(int argc, char *argv[])
 // {
@@ -107,11 +103,12 @@ int bi_exit(char *argv[])
 //         printf("Error occurred in bi_exit. Returned: %d\n", result);
 //     }
 
-//     return 0;
+//     return (0);
 // }
 
+// If a command is not found,
+//	the child process created to execute it returns a status of 127.
+// If a command is found but is not executable, the return status is 126.
 
-//If a command is not found, the child process created to execute it returns a status of 127.
-//If a command is found but is not executable, the return status is 126.
-
-//If a command fails because of an error during expansion or redirection, the exit status is greater than zero.
+// If a command fails because of an error during expansion or redirection,
+//	the exit status is greater than zero.
