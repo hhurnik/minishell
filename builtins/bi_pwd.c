@@ -3,7 +3,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+//new 
 
+//even jesli user changes path manually to something foolish, 
+//this will get the actual working dir just like bash
 int bi_pwd(char *argv[]) 
 {
     
