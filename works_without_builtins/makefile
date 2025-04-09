@@ -1,5 +1,5 @@
 NAME 				= minishell
-CC					= gcc -Wall -Werror -Wextra -I
+CC					= gcc -g -Wall -Werror -Wextra -I
 LIBFT 				= libft/libft.a
 RL_FLAGS 			= -lreadline 
 INC					= inc/

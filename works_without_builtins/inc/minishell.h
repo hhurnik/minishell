@@ -138,8 +138,9 @@ void	handle_sigint(int sig);
 int	main(int argc, char **argv, char **envp);
 
 // builtins Hon
-int	bi_cd(char **args, t_env **env);
+int	bi_cd(char *input, t_env **env);
 int	bi_echo(char *argv[]);
+char	*get_env_value2(char *key, t_env *env);
 int	bi_env(char *argv[]);
 
 void	write_stderr(char *str);
@@ -154,5 +155,9 @@ int	bi_pwd(char *argv[]);
 int	env_cmpr(t_env *env, char *varname);
 void	remove_env_var(char *varname, t_env **env);
 int	bi_unset(char **argv, t_env **env);
+void	update_pwd_env(t_env **env);
+
+
+void	free_tokens(t_token *tokens);
 
 #endif

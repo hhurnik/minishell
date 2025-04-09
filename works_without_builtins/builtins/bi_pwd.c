@@ -20,7 +20,7 @@ int	bi_pwd(char *argv[])
 
 	// Get the current working directory
 	// getcwd
-		- kopiuje an absolute pathname of the current working directory to the array
+	//	- kopiuje an absolute pathname of the current working directory to the array
 	// pointed to by buf, which is of length size.
 
 	if (getcwd(cwd, 1024) == NULL)
