@@ -1,31 +1,30 @@
 #include "inc/minishell.h"
 
 //dodaje tokeny for a single command line, to the beginning of the linked list
-void	add_token(t_token **tokens, char *value, t_token_type type)
-{
-	t_token *new = malloc(sizeof(t_token));
-	new->value = ft_strdup(value);
-	new->type = type;
-	new->next = *tokens;
-	*tokens = new;
-}
-
-// void add_token(t_token **tokens, char *value, t_token_type type)
+// void	add_token(t_token **tokens, char *value, t_token_type type)
 // {
-//     t_token *new = malloc(sizeof(t_token));
-//     new->value = ft_strdup(value);
-//     new->type = type;
-//     new->next = NULL;
-    
-//     if (!*tokens) {
-//         *tokens = new;
-//     } else {
-//         t_token *last = *tokens;
-//         while (last->next)
-//             last = last->next;
-//         last->next = new;
-//     }
+// 	t_token *new = malloc(sizeof(t_token));
+// 	new->value = ft_strdup(value);
+// 	new->type = type;
+// 	new->next = *tokens;
+// 	*tokens = new;
 // }
+
+void add_token(t_token **tokens, char *value, t_token_type type)
+{
+    t_token *new = malloc(sizeof(t_token));
+    if (!new) return;
+    
+    new->value = ft_strdup(value);  // MUST duplicate the string
+    if (!new->value) {
+        free(new);
+        return;
+    }
+    
+    new->type = type;
+    new->next = *tokens;
+    *tokens = new;
+}
 
 t_token *reverse_tokens(t_token *tokens)
 {
@@ -180,96 +179,76 @@ char	*read_quoted_content(char *input, int *i, t_quote quote, int *error)
 // 	return reverse_tokens(tokens);
 // }
 
+
+
 t_token *tokenize_input(char *input)
 {
-    // printf("\n=== START TOKENIZATION ===\n");
-    // printf("Input string: \"%s\"\n", input);
-    
     t_token *tokens = NULL;
     char *current_word = NULL;
-	//char *current_word = malloc(sizeof(char) * 100);
-
     t_quote current_quote = NO_QUOTE;
     int i = 0;
     int error = 0;
 
     while (input[i] && !error)
     {
-        // printf("\nProcessing char %d ('%c'):\n", i, input[i]);
-        // printf("Current state: word=%s, quote=%d\n", 
-        //        current_word ? current_word : "NULL", 
-        //        current_quote);
-
         if (current_quote == NO_QUOTE)
         {
             if (ft_isspace(input[i]))
             {
-                printf("Whitespace encountered\n");
                 if (current_word)
                 {
-                    // printf("Adding word token: \"%s\"\n", current_word);
                     add_token(&tokens, current_word, T_WORD);
+                    free(current_word);  // Free after adding to tokens
                     current_word = NULL;
                 }
                 i++;
                 continue;
             }
 
-            // if (input[i] == '|')
-            // {
-            //     printf("Pipe character found\n");
-            //     if (current_word)
-            //     {
-            //         printf("Adding word token before pipe: \"%s\"\n", current_word);
-            //         add_token(&tokens, current_word, T_WORD);
-            //         current_word = NULL;
-            //     }
-            //     add_token(&tokens, "|", T_PIPE);
-            //     i++;
-            // }
-            // else if (input[i] == '>' || input[i] == '<')
-            // {
-            //     printf("Redirection character found: '%c'\n", input[i]);
-            //     if (current_word)
-            //     {
-            //         printf("Adding word token before redir: \"%s\"\n", current_word);
-            //         add_token(&tokens, current_word, T_WORD);
-            //         current_word = NULL;
-            //     }
-            //     handle_redirection(input, &i, &tokens);
-            // }
-            // else if (input[i] == '\'' || input[i] == '"')
-            // {
-            //     printf("Quote found: '%c'\n", input[i]);
-            //     current_quote = (input[i] == '\'') ? SINGLE_QUOTE : DOUBLE_QUOTE;
-            //     i++;
-            //     printf("Reading quoted content starting at pos %d\n", i);
-            //     char *quoted_part = read_quoted_content(input, &i, current_quote, &error);
-                
-            //     if (error)
-            //     {
-            //         printf("ERROR: Unclosed quote\n");
-            //         ft_putstr_fd("minishell: syntax error: unclosed quote\n", STDERR_FILENO);
-            //         break;
-            //     }
-                
-            //     printf("Quoted content: \"%s\" (length %zu)\n", quoted_part, strlen(quoted_part));
-            //     current_word = ft_strjoin_free(current_word, quoted_part);
-            //     printf("Combined word: \"%s\"\n", current_word);
-            //     free(quoted_part);
-            //     current_quote = NO_QUOTE;
-            // }
+            if (input[i] == '|')
+            {
+                if (current_word)
+                {
+                    add_token(&tokens, current_word, T_WORD);
+                    free(current_word);  // Free after adding to tokens
+                    current_word = NULL;
+                }
+                add_token(&tokens, "|", T_PIPE);
+                i++;
+            }
+            else if (input[i] == '>' || input[i] == '<')
+            {
+                if (current_word)
+                {
+                    add_token(&tokens, current_word, T_WORD);
+                    free(current_word);  // Free after adding to tokens
+                    current_word = NULL;
+                }
+                handle_redirection(input, &i, &tokens);
+            }
+            else if (input[i] == '\'' || input[i] == '"')
+            {
+                current_quote = (input[i] == '\'') ? SINGLE_QUOTE : DOUBLE_QUOTE;
+                i++;
+                char *quoted_part = read_quoted_content(input, &i, current_quote, &error);
+                if (error)
+                {
+                    free(current_word);  // Free if error occurs
+                    ft_putstr_fd("minishell: syntax error: unclosed quote\n", STDERR_FILENO);
+                    break;
+                }
+                current_word = ft_strjoin_free(current_word, quoted_part);
+                free(quoted_part);
+                current_quote = NO_QUOTE;
+            }
             else
             {
-                // printf("Regular character, adding to word\n");
                 current_word = ft_strjoin_char(current_word, input[i]);
-                //printf("Current word after add: \"%s\"\n", current_word);
                 i++;
             }
         }
         else
         {
-            //printf("ERROR: Unexpected state - in quotes but quote handler not active\n");
             error = 1;
             break;
         }
@@ -277,39 +256,151 @@ t_token *tokenize_input(char *input)
 
     if (current_word)
     {
-        //printf("Adding final word token: \"%s\"\n", current_word);
         add_token(&tokens, current_word, T_WORD);
+        free(current_word);  // Free the final word
     }
 
     if (error)
     {
-        printf("ERROR DETECTED - Cleaning tokens\n");
+        free(current_word);  // Cleanup if error
         free_tokens(tokens);
-        return (NULL);
-    }
-
-    // printf("\n=== TOKENIZATION RESULTS ===\n");
-    // printf("Raw tokens (before reversal):\n");
-    t_token *tmp = tokens;
-    while (tmp)
-    {
-        //printf("Token: \"%s\" (type %d)\n", tmp->value, tmp->type);
-        tmp = tmp->next;
+        return NULL;
     }
 
     tokens = reverse_tokens(tokens);
-    
-    //printf("\nFinal tokens (after reversal):\n");
-    tmp = tokens;
-    while (tmp)
-    {
-        //printf("Token: \"%s\" (type %d)\n", tmp->value, tmp->type);
-        tmp = tmp->next;
-    }
-    //printf("=== END TOKENIZATION ===\n\n");
-
     return tokens;
 }
+
+// t_token *tokenize_input(char *input)
+// {
+//     // printf("\n=== START TOKENIZATION ===\n");
+//     // printf("Input string: \"%s\"\n", input);
+    
+//     t_token *tokens = NULL;
+//     char *current_word = NULL;
+// 	//char *current_word = malloc(sizeof(char) * 100);
+
+//     t_quote current_quote = NO_QUOTE;
+//     int i = 0;
+//     int error = 0;
+
+//     while (input[i] && !error)
+//     {
+//         // printf("\nProcessing char %d ('%c'):\n", i, input[i]);
+//         // printf("Current state: word=%s, quote=%d\n", 
+//         //        current_word ? current_word : "NULL", 
+//         //        current_quote);
+
+//         if (current_quote == NO_QUOTE)
+//         {
+//             if (ft_isspace(input[i]))
+//             {
+//                 printf("Whitespace encountered\n");
+//                 if (current_word)
+//                 {
+//                     // printf("Adding word token: \"%s\"\n", current_word);
+//                     add_token(&tokens, current_word, T_WORD);
+//                     current_word = NULL;
+//                 }
+//                 i++;
+//                 continue;
+//             }
+
+//             // if (input[i] == '|')
+//             // {
+//             //     printf("Pipe character found\n");
+//             //     if (current_word)
+//             //     {
+//             //         printf("Adding word token before pipe: \"%s\"\n", current_word);
+//             //         add_token(&tokens, current_word, T_WORD);
+//             //         current_word = NULL;
+//             //     }
+//             //     add_token(&tokens, "|", T_PIPE);
+//             //     i++;
+//             // }
+//             // else if (input[i] == '>' || input[i] == '<')
+//             // {
+//             //     printf("Redirection character found: '%c'\n", input[i]);
+//             //     if (current_word)
+//             //     {
+//             //         printf("Adding word token before redir: \"%s\"\n", current_word);
+//             //         add_token(&tokens, current_word, T_WORD);
+//             //         current_word = NULL;
+//             //     }
+//             //     handle_redirection(input, &i, &tokens);
+//             // }
+//             // else if (input[i] == '\'' || input[i] == '"')
+//             // {
+//             //     printf("Quote found: '%c'\n", input[i]);
+//             //     current_quote = (input[i] == '\'') ? SINGLE_QUOTE : DOUBLE_QUOTE;
+//             //     i++;
+//             //     printf("Reading quoted content starting at pos %d\n", i);
+//             //     char *quoted_part = read_quoted_content(input, &i, current_quote, &error);
+                
+//             //     if (error)
+//             //     {
+//             //         printf("ERROR: Unclosed quote\n");
+//             //         ft_putstr_fd("minishell: syntax error: unclosed quote\n", STDERR_FILENO);
+//             //         break;
+//             //     }
+                
+//             //     printf("Quoted content: \"%s\" (length %zu)\n", quoted_part, strlen(quoted_part));
+//             //     current_word = ft_strjoin_free(current_word, quoted_part);
+//             //     printf("Combined word: \"%s\"\n", current_word);
+//             //     free(quoted_part);
+//             //     current_quote = NO_QUOTE;
+//             // }
+//             else
+//             {
+//                 // printf("Regular character, adding to word\n");
+//                 current_word = ft_strjoin_char(current_word, input[i]);
+//                 //printf("Current word after add: \"%s\"\n", current_word);
+//                 i++;
+//             }
+//         }
+//         else
+//         {
+//             //printf("ERROR: Unexpected state - in quotes but quote handler not active\n");
+//             error = 1;
+//             break;
+//         }
+//     }
+
+//     if (current_word)
+//     {
+//         //printf("Adding final word token: \"%s\"\n", current_word);
+//         add_token(&tokens, current_word, T_WORD);
+//     }
+
+//     if (error)
+//     {
+//         printf("ERROR DETECTED - Cleaning tokens\n");
+//         free_tokens(tokens);
+//         return (NULL);
+//     }
+
+//     // printf("\n=== TOKENIZATION RESULTS ===\n");
+//     // printf("Raw tokens (before reversal):\n");
+//     t_token *tmp = tokens;
+//     while (tmp)
+//     {
+//         //printf("Token: \"%s\" (type %d)\n", tmp->value, tmp->type);
+//         tmp = tmp->next;
+//     }
+
+//     tokens = reverse_tokens(tokens);
+    
+//     //printf("\nFinal tokens (after reversal):\n");
+//     tmp = tokens;
+//     while (tmp)
+//     {
+//         //printf("Token: \"%s\" (type %d)\n", tmp->value, tmp->type);
+//         tmp = tmp->next;
+//     }
+//     //printf("=== END TOKENIZATION ===\n\n");
+
+//     return tokens;
+// }
 
 /**
  * Obsługuje tokeny przekierowań (>, >>, <, <<).

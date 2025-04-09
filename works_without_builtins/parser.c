@@ -40,30 +40,149 @@ void	handle_redirection_parser(t_token **tokens, t_cmd *cmd)
 /**
  * Zamienia tokeny na strukturę komend.
  * Sprawdza składnię (np. czy pipe nie jest na końcu).
- */
-t_cmd	*parse_tokens(t_token *tokens)
-{
-	t_cmd *cmds = NULL;
-	t_cmd *current_cmd = NULL;
+ */ //milosz
+// t_cmd	*parse_tokens(t_token *tokens)
+// {
+// 	t_cmd *cmds = NULL;
+// 	t_cmd *current_cmd = NULL;
 
-	while (tokens)
-	{
-		// Utwórz nową komendę
-		if (!current_cmd || tokens->type == T_PIPE)
-		{
-			cmd_add_back(&cmds, cmd_new());
-			current_cmd = cmd_last(cmds);
-		}
-		// Dodaj argumenty/redirekcje
-		if (is_redirection(tokens->type))
-		{
-			handle_redirection_parser(&tokens, current_cmd);
-		}
-		else if (tokens->type != T_PIPE)
-		{
-			add_arg_to_cmd(current_cmd, tokens->value);
-		}
-		tokens = tokens->next;
-	}
-	return (cmds);
+// 	while (tokens)
+// 	{
+// 		// Utwórz nową komendę
+// 		if (!current_cmd || tokens->type == T_PIPE)
+// 		{
+// 			cmd_add_back(&cmds, cmd_new());
+// 			current_cmd = cmd_last(cmds);
+// 		}
+// 		// Dodaj argumenty/redirekcje
+// 		if (is_redirection(tokens->type))
+// 		{
+// 			handle_redirection_parser(&tokens, current_cmd);
+// 		}
+// 		else if (tokens->type != T_PIPE)
+// 		{
+// 			add_arg_to_cmd(current_cmd, tokens->value);
+// 		}
+// 		tokens = tokens->next;
+// 	}
+// 	return (cmds);
+// }
+
+
+///proba
+void print_parsed_commands(t_cmd *cmds)
+{
+    int i = 0;
+    while (cmds)
+    {
+        printf("\nCommand %d:\n", ++i);
+        printf("  Args: ");
+        for (int j = 0; cmds->args[j]; j++)
+            printf("[%s] ", cmds->args[j]);
+        printf("\n");
+        
+        printf("  Redirections:\n");
+        t_redir *redir = cmds->redirections;
+        while (redir)
+        {
+            printf("    Type: %d, File: %s\n", redir->type, redir->file);
+            redir = redir->next;
+        }
+        
+        cmds = cmds->next;
+    }
+}
+
+void free_cmds(t_cmd *cmds)
+{
+    t_cmd *current = cmds;
+    
+    while (current != NULL)
+    {
+        t_cmd *next = current->next;
+        
+        // Free arguments array
+        if (current->args != NULL)
+        {
+            for (int i = 0; current->args[i] != NULL; i++)
+            {
+                free(current->args[i]);  // Free each argument string
+            }
+            free(current->args);  // Free the array itself
+        }
+        
+        // Free redirections
+        t_redir *redir = current->redirections;
+        while (redir != NULL)
+        {
+            t_redir *next_redir = redir->next;
+            free(redir->file);  // Free the filename string
+            free(redir);        // Free the redirection struct
+            redir = next_redir;
+        }
+        
+        // Close pipe file descriptors if they're open
+        if (current->pipe_fd[0] != -1)
+            close(current->pipe_fd[0]);
+        if (current->pipe_fd[1] != -1)
+            close(current->pipe_fd[1]);
+        
+        free(current);  // Free the command struct itself
+        current = next;
+    }
+}
+
+t_cmd *parse_tokens(t_token *tokens)
+{
+    printf("\n=== STARTING PARSING ===\n");
+    t_cmd *cmds = NULL;
+    t_cmd *current_cmd = NULL;
+    int cmd_count = 0;
+
+    while (tokens)
+    {
+        printf("\nProcessing token: [%s] (type %d)\n", tokens->value, tokens->type);
+        
+        // Create new command
+        if (!current_cmd || tokens->type == T_PIPE)
+        {
+            printf("Creating new command (pipe? %d)\n", tokens->type == T_PIPE);
+            cmd_add_back(&cmds, cmd_new());
+            current_cmd = cmd_last(cmds);
+            cmd_count++;
+            printf("Current command count: %d\n", cmd_count);
+        }
+
+        // Add arguments/redirections
+        if (is_redirection(tokens->type))
+        {
+            printf("Found redirection: %s\n", tokens->value);
+            handle_redirection_parser(&tokens, current_cmd);
+        }
+        else if (tokens->type != T_PIPE)
+        {
+            printf("Adding argument: %s\n", tokens->value);
+            char *arg_copy = ft_strdup(tokens->value);  // Duplicate token value
+            if (!arg_copy) {
+                // Handle memory allocation error (clean up and return NULL)
+                free_tokens(tokens);
+                free_cmds(cmds);
+                return NULL;
+            }
+            add_arg_to_cmd(current_cmd, arg_copy);
+            free(arg_copy);  // Only free if add_arg_to_cmd made its own copy
+        }
+        else
+        {
+            printf("Skipping pipe token\n");
+        }
+
+        tokens = tokens->next;
+    }
+
+    printf("\n=== PARSING COMPLETE ===\n");
+    printf("Total commands created: %d\n", cmd_count);
+    print_parsed_commands(cmds);
+    
+    return cmds;
 }
