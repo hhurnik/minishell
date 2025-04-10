@@ -65,99 +65,106 @@ char	*read_quoted_content(char *input, int *i, t_quote quote, int *error)
 	(*i)++;
 	return (content);
 }
-
 t_token	*tokenize_input(char *input)
 {
-	t_token *tokens = NULL;
-	char *current_word = NULL;
-	t_quote current_quote = NO_QUOTE;
-	int i = 0;
-	int error = 0;
+    t_token *tokens = NULL;
+    char *current_word = NULL;
+    t_quote current_quote = NO_QUOTE;
+    int i = 0;
+    int error = 0;
 
-	while (input[i] && !error)
-	{
-		if (current_quote == NO_QUOTE)
-		{
-			if (ft_isspace(input[i]))
-			{
-				if (current_word)
-				{
-					add_token(&tokens, current_word, T_WORD);
-					free(current_word); // Free after adding to tokens
-					current_word = NULL;
-				}
-				i++;
-				continue ;
-			}
+    while (input[i] && !error)
+    {
+        if (current_quote == NO_QUOTE)
+        {
+            if (ft_isspace(input[i]))
+            {
+                if (current_word)
+                {
+                    add_token(&tokens, current_word, T_WORD);
+                    free(current_word); // Free after adding to tokens
+                    current_word = NULL;
+                }
+                i++;
+                continue;
+            }
 
-			if (input[i] == '|')
-			{
-				if (current_word)
-				{
-					add_token(&tokens, current_word, T_WORD);
-					free(current_word); // Free after adding to tokens
-					current_word = NULL;
-				}
-				add_token(&tokens, "|", T_PIPE);
-				i++;
-			}
-			else if (input[i] == '>' || input[i] == '<')
-			{
-				if (current_word)
-				{
-					add_token(&tokens, current_word, T_WORD);
-					free(current_word); // Free after adding to tokens
-					current_word = NULL;
-				}
-				handle_redirection(input, &i, &tokens);
-			}
-			else if (input[i] == '\'' || input[i] == '"')
-			{
-				current_quote = (input[i] == '\'') ? SINGLE_QUOTE : DOUBLE_QUOTE;
-				i++;
-				char *quoted_part = read_quoted_content(input, &i,
-						current_quote, &error);
-				if (error)
-				{
-					free(current_word); // Free if error occurs
-					ft_putstr_fd("minishell: syntax error: unclosed quote\n",
-						STDERR_FILENO);
-					break ;
-				}
-				current_word = ft_strjoin_free(current_word, quoted_part);
-				free(quoted_part);
-				current_quote = NO_QUOTE;
-			}
-			else
-			{
-				current_word = ft_strjoin_char(current_word, input[i]);
-				i++;
-			}
-		}
-		else
-		{
-			error = 1;
-			break ;
-		}
-	}
+            if (input[i] == '|')
+            {
+                if (current_word)
+                {
+                    add_token(&tokens, current_word, T_WORD);
+                    free(current_word); // Free after adding to tokens
+                    current_word = NULL;
+                }
+                add_token(&tokens, "|", T_PIPE);
+                i++;
+            }
+            else if (input[i] == '>' || input[i] == '<')
+            {
+                if (current_word)
+                {
+                    add_token(&tokens, current_word, T_WORD);
+                    free(current_word); // Free after adding to tokens
+                    current_word = NULL;
+                }
+                handle_redirection(input, &i, &tokens);
+            }
+            else if (input[i] == '\'' || input[i] == '"')
+            {
+                current_quote = (input[i] == '\'') ? SINGLE_QUOTE : DOUBLE_QUOTE;
+                i++;
+                char *quoted_part = read_quoted_content(input, &i, current_quote, &error);
+                if (error)
+                {
+                    free(current_word); // Free if error occurs
+                    ft_putstr_fd("minishell: syntax error: unclosed quote\n", STDERR_FILENO);
+                    break;
+                }
 
-	if (current_word)
-	{
-		add_token(&tokens, current_word, T_WORD);
-		free(current_word); // Free the final word
-	}
+                // If current_word is NULL, treat the quoted part as a standalone token
+                if (!current_word)
+                {
+                    add_token(&tokens, quoted_part, T_WORD);
+                    free(quoted_part);
+                }
+                else
+                {
+                    // Otherwise, append the quoted part to the current word
+                    current_word = ft_strjoin_free(current_word, quoted_part);
+                    free(quoted_part);
+                }
+                current_quote = NO_QUOTE;
+            }
+            else
+            {
+                current_word = ft_strjoin_char(current_word, input[i]);
+                i++;
+            }
+        }
+        else
+        {
+            error = 1;
+            break;
+        }
+    }
 
-	if (error)
-	{
-		free(current_word); // Cleanup if error
-		free_tokens(tokens);
-		return (NULL);
-	}
+    if (current_word)
+    {
+        add_token(&tokens, current_word, T_WORD);
+        free(current_word); // Free the final word
+    }
 
-	tokens = reverse_tokens(tokens);
-	return (tokens);
+    if (error)
+    {
+        free(current_word); // Cleanup if error
+        free_tokens(tokens);
+        return (NULL);
+    }
+
+    tokens = reverse_tokens(tokens);
+    return (tokens);
 }
-
 void	handle_redirection(char *input, int *i, t_token **tokens)
 {
 	char first_char = input[*i]; // get the current character at this position
