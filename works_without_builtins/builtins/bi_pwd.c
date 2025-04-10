@@ -39,20 +39,44 @@
 // 	return (0);
 // }
 
+// proba
+// int bi_pwd(char *argv[]) {
+//     if (argv[1]) {
+//         ft_putstr_fd("pwd: too many arguments\n", STDERR_FILENO);
+//         return (1);
+//     }
 
-//proba
-int bi_pwd(char *argv[]) {
-    if (argv[1]) {
-        ft_putstr_fd("pwd: too many arguments\n", STDERR_FILENO);
-        return 1;
-    }
+//     char cwd[PATH_MAX];
+//     if (getcwd(cwd, sizeof(cwd))) {
+//         ft_putstr_fd(cwd, STDOUT_FILENO);
+//         ft_putstr_fd("\n", STDOUT_FILENO);
+//         return (0);
+//     }
+//     perror("minishell: pwd");
+//     return (1);
+// }
 
-    char cwd[PATH_MAX];
-    if (getcwd(cwd, sizeof(cwd))) {
-        ft_putstr_fd(cwd, STDOUT_FILENO);
-        ft_putstr_fd("\n", STDOUT_FILENO);
-        return 0;
-    }
-    perror("minishell: pwd");
-    return 1;
+int	bi_pwd(char *argv[])
+{
+	// Check if there are any arguments other than the command itself
+	if (argv[1])
+	{
+		ft_putstr_fd("pwd: too many arguments\n", STDERR_FILENO);
+			// Display error message
+		return (1);                                                
+			// Return error code
+	}
+
+	char cwd[PATH_MAX]; // Buffer to store the current directory path
+	// Get the current working directory
+	if (getcwd(cwd, sizeof(cwd)) != NULL)
+	{
+		ft_putstr_fd(cwd, STDOUT_FILENO);  // Print the current directory
+		ft_putstr_fd("\n", STDOUT_FILENO); // Print newline
+		return (0);                          // Success
+	}
+
+	// If getcwd fails, print the error
+	perror("minishell: pwd");
+	return (1); // Return error code
 }

@@ -34,23 +34,47 @@ int	execute_builtin(char **args, t_env **env)
 	}
 	return (0); // jesli nie jest to builtin
 }
+//dobre ale bez cd
+// int	run_builtin(t_cmd *cmd, t_env **env)
+// {
+// 	if (!strcmp(cmd->args[0], "echo"))
+// 		return (bi_echo(cmd->args));
+// 	if (!strcmp(cmd->args[0], "pwd"))
+// 		return (bi_pwd(cmd->args));
+// 	if (!strcmp(cmd->args[0], "exit"))
+// 		return (bi_exit(cmd->args));
+// 	if (!strcmp(cmd->args[0], "unset"))
+// 		return (bi_unset(cmd->args, env));
+// 	if (!strcmp(cmd->args[0], "export"))
+// 		return (bi_export(env));
+// 	if (!strcmp(cmd->args[0], "env"))
+// 		return (bi_env(cmd->args));
+// 	return (0);
+// 		// Not a builtin (shouldn't happen since we check is_builtin first)
+// }
 
-int	run_builtin(t_cmd *cmd, t_env **env)
+
+int run_builtin(t_cmd *cmd, t_env **env)
 {
-	if (!strcmp(cmd->args[0], "echo"))
-		return (bi_echo(cmd->args));
-	if (!strcmp(cmd->args[0], "pwd"))
-		return (bi_pwd(cmd->args));
-	if (!strcmp(cmd->args[0], "exit"))
-		return (bi_exit(cmd->args));
-	if (!strcmp(cmd->args[0], "unset"))
-		return (bi_unset(cmd->args, env));
-	if (!strcmp(cmd->args[0], "export"))
-		return (bi_export(env));
-	if (!strcmp(cmd->args[0], "env"))
-		return (bi_env(cmd->args));
-	return (0);
-		// Not a builtin (shouldn't happen since we check is_builtin first)
+    if (!strcmp(cmd->args[0], "echo"))
+        return (bi_echo(cmd->args));
+    if (!strcmp(cmd->args[0], "pwd"))
+        return (bi_pwd(cmd->args));
+    if (!strcmp(cmd->args[0], "exit"))
+        return (bi_exit(cmd->args));
+    if (!strcmp(cmd->args[0], "unset"))
+        return (bi_unset(cmd->args, env));
+    if (!strcmp(cmd->args[0], "export"))
+        return (bi_export(env));
+    if (!strcmp(cmd->args[0], "env"))
+        return (bi_env(cmd->args));
+    if (!strcmp(cmd->args[0], "cd"))
+    {
+        int status = bi_cd(*cmd->args, env);
+        update_pwd_env(env);  // After cd, update PWD environment variable
+        return status;
+    }
+    return (0); // Not a builtin (shouldn't happen since we check is_builtin first)
 }
 
 /////krotsa version

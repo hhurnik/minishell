@@ -20,6 +20,9 @@
 # define ERROR 1
 # define CMD_NOT_FOUND 127     // moze do skorzystania
 # define PERMISSION_DENIED 126 // same
+#define ERROR_cd -1
+#define SUCCESS 0
+#define DOLLAR '$'
 
 extern int g_exit_status;
 
@@ -138,9 +141,9 @@ void	handle_sigint(int sig);
 int	main(int argc, char **argv, char **envp);
 
 // builtins Hon
-int	bi_cd(char *input, t_env **env);
+int bi_cd(char *comment, t_env **env); //inaczej nazwac
 int	bi_echo(char *argv[]);
-char	*get_env_value2(char *key, t_env *env);
+char *get_env_value2(const char *key, t_env *env);
 int	bi_env(char *argv[]);
 
 void	write_stderr(char *str);
@@ -160,5 +163,19 @@ int run_builtin(t_cmd *cmd, t_env **env);
 
 
 void	free_tokens(t_token *tokens);
+
+//size_t get_length_with_space(char *str, const char *cmd);
+int handle_special_paths(char *arg, t_env **env, char *old_pwd);
+int change_directory(char *path, t_env **env, char *old_pwd);
+int print_error(const char *file, int line, int return_code, ...);
+int update_pwds(t_env **env, char *old_pwd);
+t_env *get_env(const char *key, t_env *env);
+//size_t get_length_with_space(const char *input, const char *cmd);
+int handle_special_paths(char *arg, t_env **env, char *old_pwd);
+int handle_variable_path(char *var_name, t_env **env, char *old_pwd);
+int handle_oldpwd_case(t_env **env, char *old_pwd);
+int change_to_path(const char *path, t_env **env, char *old_pwd);
+int print_error(const char *file, int line, int return_code, ...);
+size_t get_length_with_space(char *str, const char *cmd);
 
 #endif

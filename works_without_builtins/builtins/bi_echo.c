@@ -1,7 +1,11 @@
 #include "../inc/minishell.h"
 
+/*
+	TERAZ:
+	echo dziala tylko bez cudzyslowa ""
 
-// tylko echo -n
+*/
+//tylko echo -n
 // wypisuje tekst na standardowe wyjście - terminal most often (echo
 //	- na koniec wpisuje \n)
 // echo -n - without newline at the end
