@@ -112,9 +112,9 @@ char	*get_exec_path(char *cmd, t_env *env);
 // Builtins
 int	ft_cd(char **args, t_env **env);
 int	is_builtin(char *cmd);
-void	run_builtin(t_cmd *cmd, t_env **env);
+//void	run_builtin(t_cmd *cmd, t_env **env);
 void	update_pwd_env(t_env **env);
-void	run_builtin(t_cmd *cmd, t_env **env);
+//void	run_builtin(t_cmd *cmd, t_env **env);
 
 // Environment
 t_env	*init_env(char **envp);
@@ -156,6 +156,7 @@ int	env_cmpr(t_env *env, char *varname);
 void	remove_env_var(char *varname, t_env **env);
 int	bi_unset(char **argv, t_env **env);
 void	update_pwd_env(t_env **env);
+int run_builtin(t_cmd *cmd, t_env **env);
 
 
 void	free_tokens(t_token *tokens);

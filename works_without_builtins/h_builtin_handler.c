@@ -35,27 +35,24 @@ int	execute_builtin(char **args, t_env **env)
 	return (0); // jesli nie jest to builtin
 }
 
-// milos
-void	run_builtin(t_cmd *cmd, t_env **env)
+int	run_builtin(t_cmd *cmd, t_env **env)
 {
 	if (!strcmp(cmd->args[0], "echo"))
-	{
-		g_exit_status = bi_echo(cmd->args);
-		printf("gexit status after echo: %d\n", g_exit_status);
-	}
-	// if (!strcmp(cmd->args[0], "cd"))
-	// 	g_exit_status = bi_cd(*cmd->args, env);
+		return (bi_echo(cmd->args));
 	if (!strcmp(cmd->args[0], "pwd"))
-		g_exit_status = bi_pwd(cmd->args);
+		return (bi_pwd(cmd->args));
 	if (!strcmp(cmd->args[0], "exit"))
-		g_exit_status = bi_exit(cmd->args);
+		return (bi_exit(cmd->args));
 	if (!strcmp(cmd->args[0], "unset"))
-		g_exit_status = bi_unset(cmd->args, env);
+		return (bi_unset(cmd->args, env));
 	if (!strcmp(cmd->args[0], "export"))
-		g_exit_status = bi_export(env);
+		return (bi_export(env));
 	if (!strcmp(cmd->args[0], "env"))
-		g_exit_status = bi_env(cmd->args); // bedie wiecej - env
+		return (bi_env(cmd->args));
+	return (0);
+		// Not a builtin (shouldn't happen since we check is_builtin first)
 }
+
 /////krotsa version
 
 // int execute_builtin(char **args)

@@ -24,9 +24,15 @@ void	add_redir_to_cmd(t_cmd *cmd, t_redir *new_redir)
 t_cmd	*cmd_new(void)
 {
 	t_cmd *cmd = malloc(sizeof(t_cmd));
+	if (!cmd)
+		return (NULL);
+
 	cmd->args = NULL;
 	cmd->redirections = NULL;
 	cmd->next = NULL;
+	cmd->pipe_fd[0] = -1;
+	cmd->pipe_fd[1] = -1;
+
 	return (cmd);
 }
 
@@ -39,10 +45,11 @@ t_cmd	*cmd_last(t_cmd *cmds)
 	return (cmds);
 }
 
-//a pointer to a pointer allows the function to modify the head of the list (first element)
-//used to add a new command (new_cmd) t the end of the list of commands. 
-//appends a new t_cmd structure to the list, it either reates the list if empty, 
-//or adds to the end if the list already has elemensrs
+// a pointer to a pointer allows the function to modify the head of the list (first element)
+// used to add a new command (new_cmd) t the end of the list of commands.
+// appends a new t_cmd structure to the list,
+//	it either reates the list if empty,
+// or adds to the end if the list already has elemensrs
 void	cmd_add_back(t_cmd **cmds, t_cmd *new_cmd)
 {
 	if (!*cmds)
@@ -64,12 +71,33 @@ int	is_redirection(t_token_type type)
 
 void	add_arg_to_cmd(t_cmd *cmd, char *arg)
 {
-	int i = 0;
-	while (cmd->args && cmd->args[i])
+	int count = 0;
+	char **new_args;
+
+	// Count current args
+	if (cmd->args)
+		while (cmd->args[count])
+			count++;
+
+	// Allocate space for old + new + NULL
+	new_args = malloc(sizeof(char *) * (count + 2));
+	if (!new_args)
 	{
-		i++;
+		perror("minishell");
+		exit(EXIT_FAILURE); // or handle more gracefully
 	}
-	cmd->args = realloc(cmd->args, (i + 2) * sizeof(char *));
-	cmd->args[i] = ft_strdup(arg);
-	cmd->args[i + 1] = NULL;
+
+	// Copy existing args
+	for (int i = 0; i < count; i++)
+		new_args[i] = cmd->args[i];
+
+	// Add new arg and NULL terminate
+	new_args[count] = arg;
+	new_args[count + 1] = NULL;
+
+	// Free old array (but not the strings themselves)
+	free(cmd->args);
+
+	// Point cmd to new array
+	cmd->args = new_args;
 }

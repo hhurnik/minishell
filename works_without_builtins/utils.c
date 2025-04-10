@@ -17,17 +17,21 @@ char	*ft_strjoin_free(char *s1, char *s2)
 }
 
 // Dodaje pojedynczy znak do stringa
-char	*ft_strjoin_char(char *s1, char c)
+char	*ft_strjoin_char(char *s, char c)
 {
-	if (!s1)
-	{
-		s1 = malloc(sizeof(char) * 100);
-		if (!s1)
-			return (NULL);
-	}
+	int len = s ? ft_strlen(s) : 0;
+	char *new = malloc(len + 2); // +1 for char, +1 for '\0'
+	if (!new)
+		return (NULL);
 
-	char str[2] = {c, '\0'};
-	return (ft_strjoin_free(s1, str));
+	if (s)
+		ft_memcpy(new, s, len);
+
+	new[len] = c;
+	new[len + 1] = '\0';
+
+	free(s);
+	return (new);
 }
 
 int	ft_strcmp(const char *s1, const char *s2)
