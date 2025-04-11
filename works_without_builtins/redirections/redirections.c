@@ -6,7 +6,7 @@
 /*   By: hhurnik <hhurnik@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/11 15:32:38 by hhurnik           #+#    #+#             */
-/*   Updated: 2025/04/11 19:27:10 by hhurnik          ###   ########.fr       */
+/*   Updated: 2025/04/11 19:49:20 by hhurnik          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,51 +98,36 @@ int handle_heredoc(const char *delimiter)
     char *line = NULL;
     int pipe_fd[2];
 
-    // Create a pipe to store the input
     if (pipe(pipe_fd) == -1)
     {
         perror("pipe");
         return (-1);
     }
 
-    // Read input from the user until the delimiter is matched
     while (1)
     {
-        // Print the prompt for the user to input data
-        write(1, "> ", 2);  // Prompt user
-
-        // Use readline to get input from the user
-        line = readline("> "); // This reads the input from the user
-
-        // If readline returns NULL, handle EOF or error (ctrl-D / ctrl-C)
-        if (line == NULL)
+        line = readline("> ");
+        if (!line) // Handle Ctrl+D
         {
-            break;  // Exit the loop if EOF or error (NULL return)
+            write(1, "\n", 1);
+            break;
         }
 
-        // Remove the newline character that readline includes in the input
-        if (line[0] != '\0' && line[ft_strlen(line) - 1] == '\n')
-        {
-            line[ft_strlen(line) - 1] = '\0';  // Remove the newline
-        }
-
-        // Check if the input matches the delimiter (EOF)
+        // Check if line matches delimiter (without newline)
         if (ft_strcmp(line, delimiter) == 0)
         {
-            free(line);  // Free memory allocated by readline
-            break;  // Exit the loop if the delimiter is matched
+            free(line);
+            break;
         }
 
-        // Write the input (line) to the pipe
-        write(pipe_fd[1], line, ft_strlen(line));  // Write user input to the pipe
-        write(pipe_fd[1], "\n", 1);  // Re-add newline after the input
-
-        // Free the memory allocated for the line
+        // Write to pipe (with newline)
+        write(pipe_fd[1], line, strlen(line));
+        write(pipe_fd[1], "\n", 1);
         free(line);
     }
 
-    close(pipe_fd[1]);  // Close the write end of the pipe, no more writing
-    return (pipe_fd[0]);  // Return the read end of the pipe for dup2 to use
+    close(pipe_fd[1]);
+    return (pipe_fd[0]);
 }
 
 /////nie dziala, ale przynajmniej mozna wpisywac

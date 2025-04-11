@@ -189,4 +189,5 @@ int	handle_heredoc_redir(char *delimiter);
 int	setup_redirections(t_redir *redir_list);
 
 
+
 #endif
