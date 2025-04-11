@@ -178,4 +178,15 @@ int change_to_path(const char *path, t_env **env, char *old_pwd);
 int print_error(const char *file, int line, int return_code, ...);
 size_t get_length_with_space(char *str, const char *cmd);
 
+
+
+//heredoc file - with redirections
+int	handle_input_redir(char *file);
+int	handle_output_redir(char *file);
+int	handle_append_redir(char *file);
+int handle_heredoc(const char *delimiter);
+int	handle_heredoc_redir(char *delimiter);
+int	setup_redirections(t_redir *redir_list);
+
+
 #endif

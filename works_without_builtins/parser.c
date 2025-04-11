@@ -28,7 +28,7 @@ void	handle_redirection_parser(t_token **tokens, t_cmd *cmd)
 		return ;
 	}
 
-	// Przypisz nazwę pliku i dodaj przekierowanie do komendy
+	// Przypisz nazwę pliku i dodaj przek ierowanie do komendy
 	new_redir->file = ft_strdup((*tokens)->value);
 	new_redir->next = NULL;
 	add_redir_to_cmd(cmd, new_redir);
@@ -103,6 +103,7 @@ void	free_cmds(t_cmd *cmds)
 
 // pwd wciaz dziala nie na parencie, tylko na sforkowanym procesie
 // trzeba type exit several times zanim wyjdzie z minishella
+//zwraca juz sparsowane commands
 t_cmd	*parse_tokens(t_token *tokens)
 {
 	t_cmd *cmds = NULL;
@@ -122,7 +123,7 @@ t_cmd	*parse_tokens(t_token *tokens)
 		// Process current token
 		if (is_redirection(tokens->type))
 		{
-			printf("Found redirection: %s\n", tokens->value);
+			//printf("Found redirection: %s\n", tokens->value);
 			handle_redirection_parser(&tokens, current_cmd);
 		}
 		else if (tokens->type == T_PIPE)

@@ -1,12 +1,15 @@
 #include "inc/minishell.h"
 
+//leaks from readline, add historu -  is it from readline as well??
+
 int	main(int argc, char **argv, char **envp)
 {
 	(void)argc;
 	(void)argv;
 
 	setup_signals();
-	t_env *env = init_env(envp);
+	t_env *env = init_env(envp); //leakk from ft_strdup, env new, init env
+	//malloc in ft_substr, malloc in ft_strdup, env_new, init_env
 
 	while (1)
 	{
@@ -31,7 +34,7 @@ int	main(int argc, char **argv, char **envp)
 			t_cmd *cmds = parse_tokens(tokens);
 
 			if (cmds && cmds->args && cmds->args[0])
-				execute(cmds, &env);
+				execute(cmds, &env); ///problem tutaj, valgrind 989 allocs, 321 frees
 
 			free_tokens(tokens);
 			free_cmds(cmds);

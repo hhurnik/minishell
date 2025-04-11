@@ -165,32 +165,81 @@ t_token	*tokenize_input(char *input)
     tokens = reverse_tokens(tokens);
     return (tokens);
 }
-void	handle_redirection(char *input, int *i, t_token **tokens)
+
+//sprawdza czy nastepny token jest slowem
+void handle_redirection(char *input, int *i, t_token **tokens)
 {
-	char first_char = input[*i]; // get the current character at this position
-	t_token_type type;           // store the type of redirection
+    char first_char = input[*i];  // Get the current character at this position
+    t_token_type type;            // Store the type of redirection
 
-	(*i)++;
-	// Sprawdź, czy to podwójny operator (>> lub <<)
-	//(if the next character is the same as the first one)
-	if (input[*i] == first_char)
-	{
-		(*i)++;
-		// t_token_type type = (first_char == '>') ? T_APPEND : T_HEREDOC;
-		if (first_char == '>')
-			type = T_APPEND; // >>
-		else
-			type = T_HEREDOC; // <<
+    (*i)++;  // Move to the next character to check for redirection
 
-		add_token(tokens, (char[]){first_char, first_char, '\0'}, type);
-	}
-	else
-	{ // Pojedynczy operator (> lub <)
-		if (first_char == '>')
-			type = T_REDIR_OUT;
-		else
-			type = T_REDIR_IN;
-		// t_token_type type = (first_char == '>') ? T_REDIR_OUT : T_REDIR_IN;
-		add_token(tokens, (char[]){first_char, '\0'}, type);
-	}
+    // Check if it's a double operator (>> or <<)
+    if (input[*i] == first_char)
+    {
+        (*i)++;
+        if (first_char == '>')
+            type = T_APPEND;  // >>
+        else
+            type = T_HEREDOC;  // <<
+
+        // Add the token for the double operator
+        add_token(tokens, (char[]){first_char, first_char, '\0'}, type);
+    }
+    else
+    {  // Single operator (> or <)
+        if (first_char == '>')
+            type = T_REDIR_OUT;  // >
+        else
+            type = T_REDIR_IN;   // <
+
+        // Add the token for the single operator
+        add_token(tokens, (char[]){first_char, '\0'}, type);
+    }
+
+    // After adding the redirection token, check the next token
+    // The next token must be a filename, so it should be of type T_WORD
+    if (*tokens && (*tokens)->next && (*tokens)->next->type != T_WORD)
+    {
+        // If the next token is not a filename (T_WORD), print an error
+        ft_putstr_fd("minishell: syntax error: missing file name after redirection\n", STDERR_FILENO);
+        // You can set an error flag here or return to indicate an error
+        *tokens = NULL;  // To indicate an error and avoid further processing
+        return;
+    }
 }
+
+
+
+
+//milosz
+//handle_redirection bez sprawdzania czy nastepny token jest slowem
+// void	handle_redirection(char *input, int *i, t_token **tokens)
+// {
+// 	char first_char = input[*i]; // get the current character at this position
+// 	t_token_type type;           // store the type of redirection
+
+// 	(*i)++;
+// 	// Sprawdź, czy to podwójny operator (>> lub <<)
+// 	//(if the next character is the same as the first one)
+// 	if (input[*i] == first_char)
+// 	{
+// 		(*i)++;
+// 		// t_token_type type = (first_char == '>') ? T_APPEND : T_HEREDOC;
+// 		if (first_char == '>')
+// 			type = T_APPEND; // >>
+// 		else
+// 			type = T_HEREDOC; // <<
+
+// 		add_token(tokens, (char[]){first_char, first_char, '\0'}, type);
+// 	}
+// 	else
+// 	{ // Pojedynczy operator (> lub <)
+// 		if (first_char == '>')
+// 			type = T_REDIR_OUT;
+// 		else
+// 			type = T_REDIR_IN;
+// 		// t_token_type type = (first_char == '>') ? T_REDIR_OUT : T_REDIR_IN;
+// 		add_token(tokens, (char[]){first_char, '\0'}, type);
+// 	}
+// }
