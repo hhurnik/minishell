@@ -39,59 +39,6 @@ void	handle_redirection_parser(t_token **tokens, t_cmd *cmd)
 }
 
 
-//nowe poprawkki, 13.04
-// void handle_redirection_parser(t_token **tokens, t_cmd *cmd, t_cmd **cmds_head, t_token *all_tokens) // Added cmds_head and all_tokens for cleanup
-// {
-//     t_redir *new_redir = malloc(sizeof(t_redir));
-//     if (!new_redir)
-//     {
-//         perror("minishell: malloc");
-//         // Cleanup needed here if allocation fails mid-parsing
-//         free_cmds(*cmds_head);
-//         free_tokens(all_tokens); // Free original token list head
-//         // Indicate failure, maybe set a global error flag or return status?
-//         // For now, let's assume exit or error propagation happens elsewhere
-//         exit(EXIT_FAILURE); // Or return an error code
-//         return;
-//     }
-
-//     new_redir->type = (*tokens)->type;
-//     *tokens = (*tokens)->next;
-
-//     if (!*tokens || (*tokens)->type != T_WORD)
-//     {
-//         ft_putstr_fd("minishell: syntax error near unexpected token `", STDERR_FILENO);
-//         if (*tokens) ft_putstr_fd((*tokens)->value, STDERR_FILENO);
-//         else ft_putstr_fd("newline", STDERR_FILENO);
-//          ft_putstr_fd("'\n", STDERR_FILENO);
-
-//         free(new_redir);
-//         // --- FIX: Clean up partially built command list and remaining tokens ---
-//         free_cmds(*cmds_head);
-//         *cmds_head = NULL; // Mark list as freed
-//          // Need access to the head of the token list to free all
-//          // This requires passing the original token head to parse_tokens and down here
-//         free_tokens(all_tokens); // Free original token list head
-//         *tokens = NULL; // Signal error state to the caller (parse_tokens)
-//          //-----------------------------------------------------------------------
-//         g_exit_status = 2; // Syntax error status
-//         return; // Return to indicate failure
-//     }
-
-//     new_redir->file = ft_strdup((*tokens)->value);
-//      if (!new_redir->file) { // Handle strdup failure
-//          perror("minishell: strdup");
-//          free(new_redir);
-//          free_cmds(*cmds_head);
-//          free_tokens(all_tokens);
-//          exit(EXIT_FAILURE); // Or return error
-//          return;
-//      }
-//     new_redir->next = NULL;
-//     add_redir_to_cmd(cmd, new_redir);
-
-//     *tokens = (*tokens)->next;
-// }
 
 // * Zamienia tokeny na strukturę komend.
 //* Sprawdza składnię (np. czy pipe nie jest na końcu).
@@ -105,7 +52,7 @@ void	print_parsed_commands(t_cmd *cmds)
 		// for (int j = 0; cmds->args && cmds->args[j]; j++)
 		//     printf("[%s] ", cmds->args[j]);
 		// printf("\n");
-
+		
 		// printf("  Redirections:\n");
 		t_redir *redir = cmds->redirections;
 		while (redir)
@@ -113,7 +60,7 @@ void	print_parsed_commands(t_cmd *cmds)
 			printf("    Type: %d, File: %s\n", redir->type, redir->file);
 			redir = redir->next;
 		}
-
+		
 		cmds = cmds->next;
 	}
 }
@@ -121,11 +68,11 @@ void	print_parsed_commands(t_cmd *cmds)
 void	free_cmds(t_cmd *cmds)
 {
 	t_cmd *current = cmds;
-
+	
 	while (current != NULL)
 	{
 		t_cmd *next = current->next;
-
+		
 		// Free arguments array
 		if (current->args != NULL)
 		{
@@ -135,7 +82,7 @@ void	free_cmds(t_cmd *cmds)
 			}
 			free(current->args); // Free the array itself
 		}
-
+		
 		// Free redirections
 		t_redir *redir = current->redirections;
 		while (redir != NULL)
@@ -145,13 +92,13 @@ void	free_cmds(t_cmd *cmds)
 			free(redir);       // Free the redirection struct
 			redir = next_redir;
 		}
-
+		
 		// Close pipe file descriptors if they're open
 		if (current->pipe_fd[0] != -1)
-			close(current->pipe_fd[0]);
+		close(current->pipe_fd[0]);
 		if (current->pipe_fd[1] != -1)
-			close(current->pipe_fd[1]);
-
+		close(current->pipe_fd[1]);
+		
 		free(current); // Free the command struct itself
 		current = next;
 	}
@@ -160,6 +107,7 @@ void	free_cmds(t_cmd *cmds)
 // pwd wciaz dziala nie na parencie, tylko na sforkowanym procesie
 // trzeba type exit several times zanim wyjdzie z minishella
 //zwraca juz sparsowane commands
+//dobre, stare, z leakami, ponizej p[orba]
 t_cmd	*parse_tokens(t_token *tokens)
 {
 	t_cmd *cmds = NULL;

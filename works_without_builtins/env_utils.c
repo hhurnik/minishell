@@ -1,22 +1,23 @@
 #include "inc/minishell.h"
 
-//tworzy node z danym key i value - stary i z leakami
-// t_env	*env_new(char *key, char *value)
+//stare
+// t_env *env_new(char *key, char *value)
 // {
-// 	t_env *node = malloc(sizeof(t_env));
-// 	node->key = ft_strdup(key);
-// 	node->value = ft_strdup(value);
-// 	node->next = NULL;
-// 	return (node);
+//     t_env *new = malloc(sizeof(t_env));
+//     if (!new)
+//         return NULL;
+//     new->key = ft_strdup(key);    // strdup = malloc
+//     new->value = ft_strdup(value);
+//     new->next = NULL;
+//     return new;
 // }
 
-t_env *env_new(char *key, char *value)
+t_env *env_new_no_dup(char *key, char *value) 
 {
     t_env *new = malloc(sizeof(t_env));
-    if (!new)
-        return NULL;
-    new->key = ft_strdup(key);    // strdup = malloc
-    new->value = ft_strdup(value);
+    if (!new) return NULL;
+    new->key = key;     // Takes ownership
+    new->value = value; // Takes ownership
     new->next = NULL;
     return new;
 }
@@ -49,14 +50,35 @@ t_env	*init_env(char **envp)
 		char *eq = ft_strchr(*envp, '='); //zwraca pointer to the first occurence of =
 		char *key = ft_substr(*envp, 0, eq - *envp); //przed "="
 		char *value = ft_strdup(eq + 1); //zwraca wszystko po "=", points to char after =
-		env_add_back(&env, env_new(key, value));
+		env_add_back(&env, env_new_no_dup(key, value));
 		free(key); //dodane 13.04, sprawdzam
 		envp++;
 	}
 	return (env);
 }
 
-//nowe init sprawdzam
+//nowe init sprawdzam - ma chyba double strdup
+// void init_env2(char **envp, t_env **env)
+// {
+//     int i = 0;
+//     while (envp[i])
+//     {
+//         char *eq = ft_strchr(envp[i], '=');
+//         if (eq)
+//         {
+//             int key_len = eq - envp[i];
+//             char *key = ft_substr(envp[i], 0, key_len);     // malloc
+//             char *value = ft_strdup(eq + 1);                // malloc
+
+//             t_env *new = env_new(key, value);               // env_new dupes them again
+//             free(key);
+//             free(value);
+//             env_add_back(env, new);
+//         }
+//         i++;
+//     }
+// }
+
 void init_env2(char **envp, t_env **env)
 {
     int i = 0;
@@ -66,17 +88,45 @@ void init_env2(char **envp, t_env **env)
         if (eq)
         {
             int key_len = eq - envp[i];
-            char *key = ft_substr(envp[i], 0, key_len);     // malloc
-            char *value = ft_strdup(eq + 1);                // malloc
+            char *key = ft_substr(envp[i], 0, key_len);     // malloc key
+            if (!key) { /* handle error */ continue; }
+            char *value = ft_strdup(eq + 1);                // malloc value
+            if (!value) { free(key); /* handle error */ continue; }
 
-            t_env *new = env_new(key, value);               // env_new dupes them again
-            free(key);
-            free(value);
-            env_add_back(env, new);
+            // Create new node, env_new should NOT strdup again if we pass ownership
+            t_env *new_node = malloc(sizeof(t_env));
+            if (!new_node) {
+                free(key);
+                free(value);
+                // Handle major allocation failure - maybe free existing env and exit?
+                perror("minishell: malloc");
+                free_env_list(*env); // Free what we have so far
+                exit(EXIT_FAILURE);
+            }
+            new_node->key = key;     // Assign pointer directly
+            new_node->value = value; // Assign pointer directly
+            new_node->next = NULL;
+
+            env_add_back(env, new_node);
         }
         i++;
     }
 }
+
+// Make sure env_new is NOT used by init_env2, or modify env_new
+// to accept pointers without strdup'ing them again, OR just
+// allocate the node directly in init_env2 as shown above.
+// If you keep env_new, it should look like:
+/*
+t_env *env_new_no_dup(char *key, char *value) {
+    t_env *new = malloc(sizeof(t_env));
+    if (!new) return NULL;
+    new->key = key;     // Takes ownership
+    new->value = value; // Takes ownership
+    new->next = NULL;
+    return new;
+}
+*/
 
 
 //dodane 13.04, sprawdzam
@@ -117,7 +167,7 @@ void	update_pwd_env(t_env **env)
 {
 	char cwd[PATH_MAX];
 	getcwd(cwd, sizeof(cwd));
-	env_add_back(env, env_new("PWD", ft_strdup(cwd)));
+	env_add_back(env, env_new_no_dup("PWD", ft_strdup(cwd)));
 }
 
 //pwd (print wdir) - prints your current directory

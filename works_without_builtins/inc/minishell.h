@@ -99,6 +99,7 @@ int	is_redirection(t_token_type type);
 void	handle_redirection_parser(t_token **tokens, t_cmd *cmd);
 void	add_arg_to_cmd(t_cmd *cmd, char *arg);
 void	add_redir_to_cmd(t_cmd *cmd, t_redir *new_redir);
+void handle_redirection_parser2(t_token **tokens, t_cmd *cmd, t_cmd **cmds_head, t_token *all_tokens);
 
 // Expander
 char	*extract_var_name(char *str);
