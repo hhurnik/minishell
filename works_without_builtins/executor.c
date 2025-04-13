@@ -138,3 +138,21 @@ void	close_pipes(t_cmd *cmds)
 		cmds = cmds->next;
 	}
 }
+
+
+void cleanup(t_env *env, t_token *tokens, t_cmd *cmds, char *input)
+{
+    // Free readline specific things (might help with *some* readline leaks)
+    rl_clear_history(); // Clear history list maintained by readline
+    // Consider rl_deprep_terminal() if necessary, but often not needed.
+
+    // Free your data structures
+    if (input)
+        free(input);
+    if (tokens)
+        free_tokens(tokens);
+    if (cmds)
+        free_cmds(cmds);
+    if (env)
+        free_env_list(env); // Use the correct name for your env free function
+}

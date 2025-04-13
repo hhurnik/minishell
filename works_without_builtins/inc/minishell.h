@@ -148,7 +148,7 @@ int	bi_env(char *argv[]);
 
 void	write_stderr(char *str);
 int	is_integer(char *str);
-int	bi_exit(char *argv[]);
+int	bi_exit(char *argv[], t_env *env);
 
 size_t	env_len(t_env *env);
 int	bi_export(t_env **env);
@@ -199,6 +199,10 @@ void free_env_arr(char **arr);
 char **env_to_arr(t_env *env);
 char *ft_strjoin_three(const char *s1, const char *s2, const char *s3);
 int env_size(t_env *env);
+
+
+void cleanup(t_env *env, t_token *tokens, t_cmd *cmds, char *input);
+
 
 #endif
 

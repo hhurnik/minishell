@@ -26,7 +26,7 @@ int	execute_builtin(char **args, t_env **env)
 		if (!strcmp(args[0], "env"))
 			return (bi_env(args));
 		if (!strcmp(args[0], "exit"))
-			return (bi_exit(args));
+			return (bi_exit(args, *env));
 		if (!strcmp(args[0], "unset"))
 			return (bi_unset(args, env)); // change to int
 		if (!strcmp(args[0], "export"))
@@ -61,7 +61,7 @@ int run_builtin(t_cmd *cmd, t_env **env)
     if (!strcmp(cmd->args[0], "pwd"))
         return (bi_pwd(cmd->args));
     if (!strcmp(cmd->args[0], "exit"))
-        return (bi_exit(cmd->args));
+        return (bi_exit(cmd->args, *env));
     if (!strcmp(cmd->args[0], "unset"))
         return (bi_unset(cmd->args, env));
     if (!strcmp(cmd->args[0], "export"))

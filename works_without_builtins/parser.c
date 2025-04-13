@@ -6,6 +6,7 @@
  * - tokens: podwójny wskaźnik do aktualnego tokenu (np. `>` lub `<<`).
  * - cmd: bieżąca komenda, do której dodawane jest przekierowanie.
  */
+//stare - dziala, ale ulepszone chyba nizej
 void	handle_redirection_parser(t_token **tokens, t_cmd *cmd)
 {
 	t_redir *new_redir = malloc(sizeof(t_redir));
@@ -36,6 +37,61 @@ void	handle_redirection_parser(t_token **tokens, t_cmd *cmd)
 	// Przesuń się do następnego tokenu
 	*tokens = (*tokens)->next;
 }
+
+
+//nowe poprawkki, 13.04
+// void handle_redirection_parser(t_token **tokens, t_cmd *cmd, t_cmd **cmds_head, t_token *all_tokens) // Added cmds_head and all_tokens for cleanup
+// {
+//     t_redir *new_redir = malloc(sizeof(t_redir));
+//     if (!new_redir)
+//     {
+//         perror("minishell: malloc");
+//         // Cleanup needed here if allocation fails mid-parsing
+//         free_cmds(*cmds_head);
+//         free_tokens(all_tokens); // Free original token list head
+//         // Indicate failure, maybe set a global error flag or return status?
+//         // For now, let's assume exit or error propagation happens elsewhere
+//         exit(EXIT_FAILURE); // Or return an error code
+//         return;
+//     }
+
+//     new_redir->type = (*tokens)->type;
+//     *tokens = (*tokens)->next;
+
+//     if (!*tokens || (*tokens)->type != T_WORD)
+//     {
+//         ft_putstr_fd("minishell: syntax error near unexpected token `", STDERR_FILENO);
+//         if (*tokens) ft_putstr_fd((*tokens)->value, STDERR_FILENO);
+//         else ft_putstr_fd("newline", STDERR_FILENO);
+//          ft_putstr_fd("'\n", STDERR_FILENO);
+
+//         free(new_redir);
+//         // --- FIX: Clean up partially built command list and remaining tokens ---
+//         free_cmds(*cmds_head);
+//         *cmds_head = NULL; // Mark list as freed
+//          // Need access to the head of the token list to free all
+//          // This requires passing the original token head to parse_tokens and down here
+//         free_tokens(all_tokens); // Free original token list head
+//         *tokens = NULL; // Signal error state to the caller (parse_tokens)
+//          //-----------------------------------------------------------------------
+//         g_exit_status = 2; // Syntax error status
+//         return; // Return to indicate failure
+//     }
+
+//     new_redir->file = ft_strdup((*tokens)->value);
+//      if (!new_redir->file) { // Handle strdup failure
+//          perror("minishell: strdup");
+//          free(new_redir);
+//          free_cmds(*cmds_head);
+//          free_tokens(all_tokens);
+//          exit(EXIT_FAILURE); // Or return error
+//          return;
+//      }
+//     new_redir->next = NULL;
+//     add_redir_to_cmd(cmd, new_redir);
+
+//     *tokens = (*tokens)->next;
+// }
 
 // * Zamienia tokeny na strukturę komend.
 //* Sprawdza składnię (np. czy pipe nie jest na końcu).
