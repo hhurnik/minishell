@@ -1,14 +1,26 @@
 #include "inc/minishell.h"
 
-//tworzy node z danym key i value
-t_env	*env_new(char *key, char *value)
+//tworzy node z danym key i value - stary i z leakami
+// t_env	*env_new(char *key, char *value)
+// {
+// 	t_env *node = malloc(sizeof(t_env));
+// 	node->key = ft_strdup(key);
+// 	node->value = ft_strdup(value);
+// 	node->next = NULL;
+// 	return (node);
+// }
+
+t_env *env_new(char *key, char *value)
 {
-	t_env *node = malloc(sizeof(t_env));
-	node->key = ft_strdup(key);
-	node->value = ft_strdup(value);
-	node->next = NULL;
-	return (node);
+    t_env *new = malloc(sizeof(t_env));
+    if (!new)
+        return NULL;
+    new->key = ft_strdup(key);    // strdup = malloc
+    new->value = ft_strdup(value);
+    new->next = NULL;
+    return new;
 }
+
 //dodaje new node to the end of a linked list of t_env nodes
 void	env_add_back(t_env **env, t_env *new_node)
 {
@@ -28,7 +40,7 @@ void	env_add_back(t_env **env, t_env *new_node)
 		last->next = new_node;
 	}
 }
-
+//stare init_env - dziala ale z leakami -- 55 blocks
 t_env	*init_env(char **envp)
 {
 	t_env *env = NULL;
@@ -38,10 +50,49 @@ t_env	*init_env(char **envp)
 		char *key = ft_substr(*envp, 0, eq - *envp); //przed "="
 		char *value = ft_strdup(eq + 1); //zwraca wszystko po "=", points to char after =
 		env_add_back(&env, env_new(key, value));
+		free(key); //dodane 13.04, sprawdzam
 		envp++;
 	}
 	return (env);
 }
+
+//nowe init sprawdzam
+void init_env2(char **envp, t_env **env)
+{
+    int i = 0;
+    while (envp[i])
+    {
+        char *eq = ft_strchr(envp[i], '=');
+        if (eq)
+        {
+            int key_len = eq - envp[i];
+            char *key = ft_substr(envp[i], 0, key_len);     // malloc
+            char *value = ft_strdup(eq + 1);                // malloc
+
+            t_env *new = env_new(key, value);               // env_new dupes them again
+            free(key);
+            free(value);
+            env_add_back(env, new);
+        }
+        i++;
+    }
+}
+
+
+//dodane 13.04, sprawdzam
+void free_env_list(t_env *env)
+{
+    t_env *current = env;
+    while (current)
+    {
+        t_env *next = current->next;
+        free(current->key);
+        free(current->value);
+        free(current);
+        current = next;
+    }
+}
+
 
 //szuka danego key w env i wraca value
 //tu char *key - ten ktorego szukam

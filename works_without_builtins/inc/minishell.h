@@ -187,7 +187,19 @@ int	handle_append_redir(char *file);
 int handle_heredoc(const char *delimiter);
 int	handle_heredoc_redir(char *delimiter);
 int	setup_redirections(t_redir *redir_list);
+void free_env_list(t_env *env);
+
+//env utils
+void init_env2(char **envp, t_env **env);
 
 
+//executor
+
+void free_env_arr(char **arr);
+char **env_to_arr(t_env *env);
+char *ft_strjoin_three(const char *s1, const char *s2, const char *s3);
+int env_size(t_env *env);
 
 #endif
+
+///valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./main

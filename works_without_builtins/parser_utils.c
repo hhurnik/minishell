@@ -69,35 +69,62 @@ int	is_redirection(t_token_type type)
 		|| type == T_HEREDOC);
 }
 
-void	add_arg_to_cmd(t_cmd *cmd, char *arg)
+//stare, dziala ale z leakami
+// void	add_arg_to_cmd(t_cmd *cmd, char *arg)
+// {
+// 	int count = 0;
+// 	char **new_args;
+
+// 	// Count current args
+// 	if (cmd->args)
+// 		while (cmd->args[count])
+// 			count++;
+
+// 	// Allocate space for old + new + NULL
+// 	new_args = malloc(sizeof(char *) * (count + 2));
+// 	if (!new_args)
+// 	{
+// 		perror("minishell");
+// 		exit(EXIT_FAILURE); // or handle more gracefully
+// 	}
+
+// 	// Copy existing args
+// 	for (int i = 0; i < count; i++)
+// 		new_args[i] = cmd->args[i];
+
+// 	// Add new arg and NULL terminate
+// 	new_args[count] = arg;
+// 	new_args[count + 1] = NULL;
+
+// 	// Free old array (but not the strings themselves)
+// 	free(cmd->args);
+
+// 	// Point cmd to new array
+// 	cmd->args = new_args;
+// }
+
+void add_arg_to_cmd(t_cmd *cmd, char *arg)
 {
-	int count = 0;
-	char **new_args;
+    int count = 0;
+    char **new_args;
 
-	// Count current args
-	if (cmd->args)
-		while (cmd->args[count])
-			count++;
+    if (cmd->args)
+        while (cmd->args[count])
+            count++;
 
-	// Allocate space for old + new + NULL
-	new_args = malloc(sizeof(char *) * (count + 2));
-	if (!new_args)
-	{
-		perror("minishell");
-		exit(EXIT_FAILURE); // or handle more gracefully
-	}
+    new_args = malloc(sizeof(char *) * (count + 2));
+    if (!new_args) {
+        perror("minishell");
+        exit(EXIT_FAILURE);  // Or handle more gracefully
+    }
 
-	// Copy existing args
-	for (int i = 0; i < count; i++)
-		new_args[i] = cmd->args[i];
+    for (int i = 0; i < count; i++)
+        new_args[i] = cmd->args[i];
 
-	// Add new arg and NULL terminate
-	new_args[count] = arg;
-	new_args[count + 1] = NULL;
+    new_args[count] = arg;
+    new_args[count + 1] = NULL;
 
-	// Free old array (but not the strings themselves)
-	free(cmd->args);
-
-	// Point cmd to new array
-	cmd->args = new_args;
+    if (cmd->args)
+        free(cmd->args);
+    cmd->args = new_args;
 }

@@ -7,7 +7,7 @@ void	restore_std_fds(int stdin_copy, int stdout_copy)
 	close(stdin_copy);
 	close(stdout_copy);
 }
-
+//stare - z leakami
 void execute(t_cmd *cmds, t_env **env)
 {
     int stdin_copy = dup(STDIN_FILENO);

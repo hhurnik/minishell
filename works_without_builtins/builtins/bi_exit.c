@@ -6,7 +6,7 @@
 /*   By: hhurnik <hhurnik@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/24 20:19:34 by hhurnik           #+#    #+#             */
-/*   Updated: 2025/04/07 20:33:34 by hhurnik          ###   ########.fr       */
+/*   Updated: 2025/04/13 19:12:21 by hhurnik          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,7 @@ int	bi_exit(char *argv[])
 	int	exit_code;
 
 	// jesli wiecej niz 1 argument, to nie wychodzi z shella - zwraca 1
-	if (argv[2])
+	if (argv[1] && argv[2])
 	{
 		write_stderr("exit: too many arguments\n");
 		// nie wychodzi, wiec nie exit tylko return (return (1));
