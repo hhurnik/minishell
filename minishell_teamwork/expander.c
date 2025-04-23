@@ -9,7 +9,7 @@
 char	*extract_var_name(char *str)
 {
 	int len = 0;
-	while (str[len] && (ft_isalnum(str[len]) || str[len] == '_'))
+	while (str[len] && ((ft_isalnum(str[len]) && str[len] == '{' && str[len] =='}') || str[len] == '_'))
 	{
 		len++;
 	}
@@ -17,11 +17,11 @@ char	*extract_var_name(char *str)
 }
 
 
-void expand_variables(t_token *tokens, t_env *env) 
+void expand_variables(t_token *tokens, t_env *env)
 {
-    while (tokens) 
+    while (tokens)
 	{
-        if (tokens->type == T_DOUBLE_QUOTED || tokens->type == T_WORD) 
+        if (tokens->type == T_DOUBLE_QUOTED || tokens->type == T_WORD)
 		{
             // Rozwijaj zmienne tylko w podwójnych cudzysłowach i zwykłych słowach
             char *expanded = expand_str(tokens->value, env);
@@ -72,6 +72,11 @@ char	*expand_str(char *str, t_env *env)
 
     while (str[i])
     {
+        if (str[i] == '$' && (str[i + 1] == '{' || str[i + 1] == '('))
+        {
+            ft_putstr_fd("Squish: syntax error: Squish doesn't handle brackets \n", STDERR_FILENO);
+            break;
+        }
         if (str[i] == '$' && str[i + 1] == '?') // Handle special case for $?
         {
             result = ft_strjoin_free(result, ft_itoa(g_exit_status));
@@ -85,6 +90,7 @@ char	*expand_str(char *str, t_env *env)
                 result = ft_strjoin_free(result, "$");
                 i++; // Skip the '$'
             }
+
             else
             {
                 char *var_value = get_env_value(var_name, env);
