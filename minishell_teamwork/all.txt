@@ -1,0 +1,2217 @@
+
+#include "inc/minishell.h"
+
+int	is_builtin(char *cmd)
+{
+	// !strcmp(cmd, "cd") is true if cmd is "cd".
+	if ((!strcmp(cmd, "echo") || !strcmp(cmd, "cd") || !strcmp(cmd, "pwd")
+			|| !strcmp(cmd, "export") || !strcmp(cmd, "unset") || !strcmp(cmd,
+				"env") || !strcmp(cmd, "exit")))
+		return (1); // jesli to builtin
+	else
+		return (0);
+}
+
+int	execute_builtin(char **args, t_env **env)
+{
+	// char **env; //skads to wiać - global? cy prekazana jako argument?
+	if (is_builtin(args[0]) == 1)
+	{
+		if (!strcmp(args[0], "echo"))
+			return (bi_echo(args));
+		// if (!strcmp(args[0], "cd"))
+		// 	return (bi_cd(args[1], env));
+		if (!strcmp(args[0], "pwd"))
+			return (bi_pwd(args));
+		if (!strcmp(args[0], "env"))
+			return (bi_env(args, env));
+		if (!strcmp(args[0], "exit"))
+			return (bi_exit(args, *env));
+		if (!strcmp(args[0], "unset"))
+			return (bi_unset(args, env)); // change to int
+		if (!strcmp(args[0], "export"))
+			return (bi_export(args, env)); // environment ////change to int
+	}
+	return (0); // jesli nie jest to builtin
+}
+
+int run_builtin(t_cmd *cmd, t_env **env)
+{
+    if (!strcmp(cmd->args[0], "echo"))
+        return (bi_echo(cmd->args));
+    if (!strcmp(cmd->args[0], "pwd"))
+        return (bi_pwd(cmd->args));
+    if (!strcmp(cmd->args[0], "exit"))
+        return (bi_exit(cmd->args, *env));
+    if (!strcmp(cmd->args[0], "unset"))
+        return (bi_unset(cmd->args, env));
+    if (!strcmp(cmd->args[0], "export"))
+        return (bi_export(cmd->args, env));
+    if (!strcmp(cmd->args[0], "env"))
+        return (bi_env(cmd->args, env));
+    if (!strcmp(cmd->args[0], "cd"))
+    {
+        int status = bi_cd(cmd->args, env);
+        update_pwd_env(env);  // After cd, update PWD environment variable
+        return status;
+    }
+    return (0); // Not a builtin (shouldn't happen since we check is_builtin first)
+}
+#include "inc/minishell.h"
+
+t_env *env_new_no_dup(char *key, char *value) 
+{
+    t_env *new = malloc(sizeof(t_env));
+    if (!new) return NULL;
+    new->key = key;     // Takes ownership
+    new->value = value; // Takes ownership
+    new->next = NULL;
+    return new;
+}
+
+//dodaje new node to the end of a linked list of t_env nodes
+void	env_add_back(t_env **env, t_env *new_node)
+{
+	//if empty list, zrob nowy node
+	if (!*env)
+	{
+		*env = new_node;
+	}
+	else
+	{
+		t_env *last = *env;
+		//dopoki ten node ma nastepny node, keep going (last idzie a do final node)
+		while (last->next)
+		{
+			last = last->next;
+		}
+		last->next = new_node;
+	}
+}
+//stare init_env - dziala ale z leakami -- 55 blocks
+t_env	*init_env(char **envp)
+{
+	t_env *env = NULL;
+	while (*envp)
+	{
+		char *eq = ft_strchr(*envp, '='); //zwraca pointer to the first occurence of =
+		char *key = ft_substr(*envp, 0, eq - *envp); //przed "="
+		char *value = ft_strdup(eq + 1); //zwraca wszystko po "=", points to char after =
+		env_add_back(&env, env_new_no_dup(key, value));
+		free(key); //dodane 13.04, sprawdzam
+		envp++;
+	}
+	return (env);
+}
+
+
+void init_env2(char **envp, t_env **env)
+{
+    int i = 0;
+    while (envp[i])
+    {
+        char *eq = ft_strchr(envp[i], '=');
+        if (eq)
+        {
+            int key_len = eq - envp[i];
+            char *key = ft_substr(envp[i], 0, key_len);     // malloc key
+            if (!key) { /* handle error */ continue; }
+            char *value = ft_strdup(eq + 1);                // malloc value
+            if (!value) { free(key); /* handle error */ continue; }
+
+            // Create new node, env_new should NOT strdup again if we pass ownership
+            t_env *new_node = malloc(sizeof(t_env));
+            if (!new_node) {
+                free(key);
+                free(value);
+                // Handle major allocation failure - maybe free existing env and exit?
+                perror("minishell: malloc");
+                free_env_list(*env); // Free what we have so far
+                exit(EXIT_FAILURE);
+            }
+            new_node->key = key;     // Assign pointer directly
+            new_node->value = value; // Assign pointer directly
+            new_node->next = NULL;
+
+            env_add_back(env, new_node);
+        }
+        i++;
+    }
+}
+
+//dodane 13.04, sprawdzam
+void free_env_list(t_env *env)
+{
+    t_env *current = env;
+    while (current)
+    {
+        t_env *next = current->next;
+        free(current->key);
+        free(current->value);
+        free(current);
+        current = next;
+    }
+}
+
+
+//szuka danego key w env i wraca value
+//tu char *key - ten ktorego szukam
+char	*get_env_value(char *key, t_env *env)
+{
+	while (env)
+	{
+		if (ft_strcmp(env->key, key) == 0)
+			return (env->value);
+		//if the current key doesnt match, move to the next noe
+		env = env->next;
+	}
+	return (NULL);
+}
+
+//PATH_MAX - stala definiujaca max possible length of a path on a system (4096 on Linux)
+//creates a "PWD" env variable with that path
+//adds it t the end of the list
+//pwd - absolute path of your curent directory
+//potrzebne zeby minishell wiedzial gdzie jest w kazdym momencie
+void	update_pwd_env(t_env **env)
+{
+	char cwd[PATH_MAX];
+	getcwd(cwd, sizeof(cwd));
+	env_add_back(env, env_new_no_dup("PWD", ft_strdup(cwd)));
+}
+
+//pwd (print wdir) - prints your current directory
+//cd (change dir) - changes your working directory to your home directory, does not print by default
+
+// cd / cd ~ wstawi HOME
+#include "inc/minishell.h"
+
+void	restore_std_fds(int stdin_copy, int stdout_copy)
+{
+	dup2(stdin_copy, STDIN_FILENO);
+	dup2(stdout_copy, STDOUT_FILENO);
+	close(stdin_copy);
+	close(stdout_copy);
+}
+
+void execute(t_cmd *cmds, t_env **env)
+{
+    // Set flag that we're in a command
+    g_in_command = 1;
+    
+    int stdin_copy = dup(STDIN_FILENO);
+    int stdout_copy = dup(STDOUT_FILENO);
+    int status;
+    int prev_pipe_read = -1;
+
+    if (!cmds || !cmds->args || !cmds->args[0])
+    {
+        ft_putstr_fd("minishell: null command\n", STDERR_FILENO);
+        g_in_command = 0;  // Reset the flag before returning
+        return;
+    }
+
+    // Builtin in parent process if no pipes
+    if (is_builtin(cmds->args[0]) && !cmds->next)
+    {
+        handle_redirections(cmds);
+        g_exit_status = run_builtin(cmds, env);
+        restore_std_fds(stdin_copy, stdout_copy);
+        g_in_command = 0;  // Reset the flag before returning
+        return;
+    }
+
+    // Continue forking path (pipelines or non-builtin)
+    while (cmds)
+    {
+        int pipe_fd[2] = {-1, -1};
+        
+        // Create pipe if there's a next command
+        if (cmds->next && pipe(pipe_fd) == -1)
+        {
+            perror("minishell: pipe");
+            break;
+        }
+
+        pid_t pid = fork();
+        if (pid == -1)
+        {
+            perror("minishell: fork");
+            if (pipe_fd[0] != -1) close(pipe_fd[0]);
+            if (pipe_fd[1] != -1) close(pipe_fd[1]);
+            break;
+        }
+        else if (pid == 0)  // Child process
+        {
+            // Set up input from previous command if needed
+            if (prev_pipe_read != -1)
+            {
+                dup2(prev_pipe_read, STDIN_FILENO);
+                close(prev_pipe_read);
+            }
+            
+            // Set up output to next command if needed
+            if (cmds->next)
+            {
+                dup2(pipe_fd[1], STDOUT_FILENO);
+            }
+            
+            // Close unused pipe ends
+            if (pipe_fd[0] != -1) close(pipe_fd[0]);
+            if (pipe_fd[1] != -1) close(pipe_fd[1]);
+
+            handle_redirections(cmds);
+
+            // If it's a builtin, run it in the child process
+            if (is_builtin(cmds->args[0]))
+            {
+                exit(run_builtin(cmds, env));
+            }
+            else  // External command
+            {
+                // Ensure the environment is up to date for the child
+                char *path = get_exec_path(cmds->args[0], *env);
+                char **env_arr = env_to_arr(*env);
+
+                // Execute the command
+                if (path)
+                    execve(path, cmds->args, env_arr);
+                else
+                    execvp(cmds->args[0], cmds->args);  // Try direct execution as fallback
+                    
+                perror("minishell");
+                exit(127);  // Command not found
+            }
+        }
+
+        // Parent process
+        
+        // Close previous pipe input if we had one
+        if (prev_pipe_read != -1)
+            close(prev_pipe_read);
+        
+        // Set up for next iteration
+        if (cmds->next)
+        {
+            prev_pipe_read = pipe_fd[0];  // Save read end for next command
+            close(pipe_fd[1]);            // Close write end in parent
+        }
+        else if (pipe_fd[0] != -1)
+        {
+            // Last command, close any remaining pipe ends
+            close(pipe_fd[0]);
+        }
+
+        cmds = cmds->next;
+    }
+
+    // Wait for all child processes to finish
+    while (waitpid(-1, &status, 0) > 0)
+    {
+        if (WIFEXITED(status))
+            g_exit_status = WEXITSTATUS(status);
+    }
+
+    // At the end of function
+    g_in_command = 0;  // Reset the flag
+    restore_std_fds(stdin_copy, stdout_copy);
+}
+
+void	handle_redirections(t_cmd *cmd)
+{
+	t_redir *redir = cmd->redirections;
+	while (redir)
+	{
+		if (redir->type == T_REDIR_IN)
+		{
+			int fd = open(redir->file, O_RDONLY);
+			dup2(fd, STDIN_FILENO);
+			close(fd);
+		}
+		else if (redir->type == T_REDIR_OUT)
+		{
+			int fd = open(redir->file, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+			dup2(fd, STDOUT_FILENO);
+			close(fd);
+		}
+		else if (redir->type == T_APPEND)
+		{
+			int fd = open(redir->file, O_WRONLY | O_CREAT | O_APPEND, 0644);
+			dup2(fd, STDOUT_FILENO);
+			close(fd);
+		}
+		else if (redir->type == T_HEREDOC)
+		{
+			int fd = handle_heredoc(redir->file);
+            if (fd < 0)
+                ft_putstr_fd("minishell: heredoc failed\n", STDERR_FILENO);
+                
+            dup2(fd, STDIN_FILENO);
+            close(fd);
+        }
+		redir = redir->next;
+	}
+}
+
+void	close_pipes(t_cmd *cmds)
+{
+	while (cmds)
+	{
+		if (cmds->pipe_fd[0] != -1)
+			close(cmds->pipe_fd[0]);
+		if (cmds->pipe_fd[1] != -1)
+			close(cmds->pipe_fd[1]);
+		cmds = cmds->next;
+	}
+}
+
+
+void cleanup(t_env *env, t_token *tokens, t_cmd *cmds, char *input)
+{
+    // Free readline specific things (might help with *some* readline leaks)
+    rl_clear_history(); // Clear history list maintained by readline
+    // Consider rl_deprep_terminal() if necessary, but often not needed.
+
+    // Free your data structures
+    if (input)
+        free(input);
+    if (tokens)
+        free_tokens(tokens);
+    if (cmds)
+        free_cmds(cmds);
+    if (env)
+        free_env_list(env); // Use the correct name for your env free function
+}
+#include "inc/minishell.h"
+
+
+int		g_exit_status = 0; // Globalna zmienna stanu
+
+char	**env_to_arr(t_env *env)
+{
+	if (!env)
+		return (NULL); // Zabezpieczenie przed NULL-em
+
+	int count = 0;
+	t_env *current = env;
+	while (current)
+	{
+		count++;
+		current = current->next;
+	}
+
+	char **arr = malloc((count + 1) * sizeof(char *));
+	if (!arr)
+		return (NULL);
+
+	current = env;
+	int i = 0;
+	int error = 0; // Flaga błędu
+
+	while (current && !error)
+	{
+		if (!current->key || !current->value)
+		{ // Zabezpieczenie przed NULL
+			error = 1;
+			break ;
+		}
+
+		char *key_eq = ft_strjoin(current->key, "=");
+		if (!key_eq)
+		{
+			error = 1;
+			break ;
+		}
+
+		char *entry = ft_strjoin(key_eq, current->value);
+		free(key_eq);
+		if (!entry)
+		{
+			error = 1;
+			break ;
+		}
+
+		arr[i++] = entry;
+		current = current->next;
+	}
+
+	if (error)
+	{
+		// Zwolnij tylko do ostatniego poprawnego elementu (0..i-1)
+		while (i > 0)
+		{
+			free(arr[--i]);
+		}
+		free(arr);
+		return (NULL);
+	}
+
+	arr[i] = NULL; // Kończymy tablicę NULL
+	return (arr);
+}
+#include "inc/minishell.h"
+
+
+/**
+ * Wyodrębnia nazwę zmiennej środowiskowej (np. z "$USER" → "USER").
+ * - str: wskaźnik do znaku '$' (np. "USER=john").
+ * Zwraca: nazwa zmiennej (malloc).
+ */
+char	*extract_var_name(char *str)
+{
+	int len = 0;
+	while (str[len] && (ft_isalnum(str[len]) || str[len] == '_'))
+	{
+		len++;
+	}
+	return (ft_substr(str, 0, len));
+}
+
+
+void expand_variables(t_token *tokens, t_env *env) 
+{
+    while (tokens) 
+	{
+        if (tokens->type == T_DOUBLE_QUOTED || tokens->type == T_WORD) 
+		{
+            // Rozwijaj zmienne tylko w podwójnych cudzysłowach i zwykłych słowach
+            char *expanded = expand_str(tokens->value, env);
+            free(tokens->value);
+            tokens->value = expanded;
+        }
+        // Dla T_SINGLE_QUOTED nie wykonuj ekspansji!
+        tokens = tokens->next;
+    }
+}
+
+// Przykład: Zamienia "$USER" na wartość zmiennej USER
+char	*expand_str(char *str, t_env *env)
+{
+	char *result = ft_strdup("");
+	int i = 0;
+
+	while (str[i])
+	{
+		if (str[i] == '$' && str[i + 1] == '?')
+		{
+			result = ft_strjoin_free(result, ft_itoa(g_exit_status));
+			i += 2;
+		}
+		else if (str[i] == '$')
+		{
+			char *var_name = extract_var_name(str + i + 1);
+			char *var_value = get_env_value(var_name, env);
+			result = ft_strjoin_free(result, var_value);
+			i += ft_strlen(var_name) + 1;
+			free(var_name);
+		}
+		else
+		{
+			char c[2] = {str[i], '\0'};
+            result = ft_strjoin_free(result, c);
+		}
+		i++;
+	}
+	return (result);
+}
+#include "inc/minishell.h"
+
+
+// dodaje tokeny for a single command line, to the beginning of the linked list
+void	add_token(t_token **tokens, char *value, t_token_type type)
+{
+	t_token *new = malloc(sizeof(t_token));
+	if (!new)
+		return ;
+
+	new->value = ft_strdup(value); // MUST duplicate the string
+	if (!new->value)
+	{
+		free(new);
+		return ;
+	}
+
+	new->type = type;
+	new->next = *tokens;
+	*tokens = new;
+}
+
+t_token	*reverse_tokens(t_token *tokens)
+{
+	t_token *prev = NULL;
+	t_token *current = tokens;
+	t_token *next = NULL;
+
+	while (current)
+	{
+		next = current->next;
+		current->next = prev;
+		prev = current;
+		current = next;
+	}
+	return (prev);
+}
+
+void	free_tokens(t_token *tokens)
+{
+	while (tokens)
+	{
+		t_token *tmp = tokens;
+		tokens = tokens->next;
+		free(tmp->value);
+		free(tmp);
+	}
+}
+// to read if its after ' or ", as long as its not ' or " at the end
+// error if it doesnt end with ' or "
+char	*read_quoted_content(char *input, int *i, t_quote quote, int *error)
+{
+	char quote_char = (quote == SINGLE_QUOTE) ? '\'' : '"';
+	int start = *i;
+	while (input[*i] && input[*i] != quote_char)
+	{
+		(*i)++;
+	}
+	if (input[*i] != quote_char)
+	{
+		*error = 1;
+		return (NULL);
+	}
+	char *content = ft_substr(input, start, *i - start);
+	(*i)++;
+	return (content);
+}
+
+t_token	*tokenize_input(char *input)
+{
+    t_token *tokens = NULL;
+    char *current_word = NULL;
+    t_quote current_quote = NO_QUOTE;
+    int i = 0;
+    int error = 0;
+
+    while (input[i] && !error)
+    {
+        if (current_quote == NO_QUOTE)
+        {
+            if (ft_isspace(input[i]))
+            {
+                if (current_word)
+                {
+                    add_token(&tokens, current_word, T_WORD);
+                    free(current_word);
+                    current_word = NULL;
+                }
+                i++;
+                continue;
+            }
+
+            if (input[i] == '|')
+            {
+                if (current_word)
+                {
+                    add_token(&tokens, current_word, T_WORD);
+                    free(current_word); // Free after adding to tokens
+                    current_word = NULL;
+                }
+                add_token(&tokens, "|", T_PIPE);
+                i++;
+            }
+            else if (input[i] == '>' || input[i] == '<')
+            {
+                if (current_word)
+                {
+                    add_token(&tokens, current_word, T_WORD);
+                    free(current_word); // Free after adding to tokens
+                    current_word = NULL;
+                }
+                handle_redirection(input, &i, &tokens);
+            }
+           else if (input[i] == '\'' || input[i] == '"') {
+                // Finalizuj bieżące słowo przed cudzysłowem
+                if (current_word) {
+                    add_token(&tokens, current_word, T_WORD);
+                    free(current_word);
+                    current_word = NULL;
+                }
+
+                // Obsługa cudzysłowu
+                current_quote = (input[i] == '\'') ? SINGLE_QUOTE : DOUBLE_QUOTE;
+                i++;
+                char *quoted_part = read_quoted_content(input, &i, current_quote, &error);
+                
+                if (error) {
+                    ft_putstr_fd("Squish: syntax error: unclosed quote\n", STDERR_FILENO);
+                    break;
+                }
+
+                // Dodaj zawartość cudzysłowu jako specjalny token
+                t_token_type quote_type = (current_quote == SINGLE_QUOTE) ? T_SINGLE_QUOTED : T_DOUBLE_QUOTED;
+                add_token(&tokens, quoted_part, quote_type);
+                free(quoted_part);
+                current_quote = NO_QUOTE;
+            }
+            else {
+                current_word = ft_strjoin_char(current_word, input[i]);
+                i++;
+            }
+        }
+        else {
+            error = 1;
+            break;
+        }
+    }
+
+    if (current_word) {
+        add_token(&tokens, current_word, T_WORD);
+        free(current_word);
+    }
+
+    if (error) {
+        free(current_word);
+        free_tokens(tokens);
+        return NULL;
+    }
+    return reverse_tokens(tokens);
+}
+
+//sprawdza czy nastepny token jest slowem
+void handle_redirection(char *input, int *i, t_token **tokens)
+{
+    char first_char = input[*i];  // Get the current character at this position
+    t_token_type type;            // Store the type of redirection
+
+    (*i)++;  // Move to the next character to check for redirection
+
+    // Check if it's a double operator (>> or <<)
+    if (input[*i] == first_char)
+    {
+        (*i)++;
+        if (first_char == '>')
+            type = T_APPEND;  // >>
+        else
+            type = T_HEREDOC;  // <<
+
+        // Add the token for the double operator
+        add_token(tokens, (char[]){first_char, first_char, '\0'}, type);
+    }
+    else
+    {  // Single operator (> or <)
+        if (first_char == '>')
+            type = T_REDIR_OUT;  // >
+        else
+            type = T_REDIR_IN;   // <
+
+        // Add the token for the single operator
+        add_token(tokens, (char[]){first_char, '\0'}, type);
+    }
+
+    // After adding the redirection token, check the next token
+    // The next token must be a filename, so it should be of type T_WORD
+    if (*tokens && (*tokens)->next && (*tokens)->next->type != T_WORD)
+    {
+        // If the next token is not a filename (T_WORD), print an error
+        ft_putstr_fd("minishell: syntax error: missing file name after redirection\n", STDERR_FILENO);
+        // You can set an error flag here or return to indicate an error
+        *tokens = NULL;  // To indicate an error and avoid further processing
+        return;
+    }
+}
+#include "inc/minishell.h"
+#include <mcheck.h>
+
+
+void free_env(t_env *env)
+{
+    t_env *tmp;
+    
+    while (env)
+    {
+        tmp = env;
+        env = env->next;
+        free(tmp->key);
+        free(tmp->value);
+        free(tmp);
+    }
+}
+
+int main(int argc, char **argv, char **envp)
+{
+    (void)argc;
+    (void)argv;
+    int exit_status_on_eof = 0; // Store exit status if needed
+
+    setup_signals();
+    t_env *env = NULL;
+    init_env2(envp, &env);
+
+    while (1)
+    {
+        char *input = readline("minishell$ ");
+        if (!input) // Handle Ctrl+D (EOF)
+        {
+            ft_putstr_fd("exit\n", STDOUT_FILENO);
+            exit_status_on_eof = g_exit_status; // Save last status
+            cleanup(env, NULL, NULL, NULL); // Clean up environment
+            exit(exit_status_on_eof);         // Exit gracefully
+        }
+
+        t_token *tokens = NULL;
+        t_cmd *cmds = NULL;
+
+        if (*input)
+        {
+            add_history(input);
+            tokens = tokenize_input(input);
+
+            if (!tokens)
+            {
+                free(input); // Input freed here if tokenization failed
+                input = NULL;
+                continue;
+            }
+
+            expand_variables(tokens, env);
+            cmds = parse_tokens(tokens); // Potential leak if parse fails mid-way
+
+            // Check if parsing failed and returned NULL but tokens existed
+            if (!cmds && tokens) {
+                 // Free tokens if parsing failed to produce commands
+                // free_tokens(tokens); // Already freed in parse_tokens error path? Double check.
+                // tokens = NULL;       // Or handle error from parse_tokens better
+            }
+             else if (cmds && cmds->args && cmds->args[0])
+            {
+                // Pass input and tokens to execute/builtins if they need it for cleanup
+                execute(cmds, &env);
+            }
+        }
+
+        // Free structures for this iteration *before* the next readline
+        if (cmds) {
+            free_cmds(cmds);
+            cmds = NULL;
+        }
+        if (tokens) {
+            free_tokens(tokens);
+            tokens = NULL;
+        }
+        if (input) {
+            free(input);
+            input = NULL;
+        }
+    }
+
+    // This part is now effectively unreachable due to exit() calls
+    // cleanup(env, NULL, NULL, NULL); // Call cleanup here if loop could break differently
+    // return (g_exit_status); // Return last status
+}#include "inc/minishell.h"
+
+
+/**
+ * Obsługuje tokeny przekierowań w parserze.
+ * - tokens: podwójny wskaźnik do aktualnego tokenu (np. `>` lub `<<`).
+ * - cmd: bieżąca komenda, do której dodawane jest przekierowanie.
+ */
+//stare - dziala, ale ulepszone chyba nizej
+void	handle_redirection_parser(t_token **tokens, t_cmd *cmd)
+{
+	t_redir *new_redir = malloc(sizeof(t_redir));
+	if (!new_redir)
+	{
+		perror("minishell");
+		return ;
+	}
+
+	// Ustaw typ przekierowania na podstawie tokenu
+	new_redir->type = (*tokens)->type;
+
+	// Przesuń się do następnego tokenu (powinien być nazwa pliku)
+	*tokens = (*tokens)->next;
+	if (!*tokens || (*tokens)->type != T_WORD)
+	{
+		ft_putstr_fd("minishell: syntax error near unexpected token\n",
+			STDERR_FILENO);
+		free(new_redir);
+		return ;
+	}
+
+	// Przypisz nazwę pliku i dodaj przek ierowanie do komendy
+	new_redir->file = ft_strdup((*tokens)->value);
+	new_redir->next = NULL;
+	add_redir_to_cmd(cmd, new_redir);
+
+	// Przesuń się do następnego tokenu
+	*tokens = (*tokens)->next;
+}
+
+
+
+// * Zamienia tokeny na strukturę komend.
+//* Sprawdza składnię (np. czy pipe nie jest na końcu).
+// void	print_parsed_commands(t_cmd *cmds)
+// {
+// 	// int i = 0;
+// 	while (cmds)
+// 	{
+// 		// printf("\nCommand %d:\n", ++i);
+// 		// printf("  Args: ");
+// 		// for (int j = 0; cmds->args && cmds->args[j]; j++)
+// 		//     printf("[%s] ", cmds->args[j]);
+// 		// printf("\n");
+		
+// 		// printf("  Redirections:\n");
+// 		t_redir *redir = cmds->redirections;
+// 		while (redir)
+// 		{
+// 			printf("    Type: %d, File: %s\n", redir->type, redir->file);
+// 			redir = redir->next;
+// 		}
+		
+// 		cmds = cmds->next;
+// 	}
+// }
+
+void	free_cmds(t_cmd *cmds)
+{
+	t_cmd *current = cmds;
+	
+	while (current != NULL)
+	{
+		t_cmd *next = current->next;
+		
+		// Free arguments array
+		if (current->args != NULL)
+		{
+			for (int i = 0; current->args[i] != NULL; i++)
+			{
+				free(current->args[i]); // Free each argument string
+			}
+			free(current->args); // Free the array itself
+		}
+		
+		// Free redirections
+		t_redir *redir = current->redirections;
+		while (redir != NULL)
+		{
+			t_redir *next_redir = redir->next;
+			free(redir->file); // Free the filename string
+			free(redir);       // Free the redirection struct
+			redir = next_redir;
+		}
+		
+		// Close pipe file descriptors if they're open
+		if (current->pipe_fd[0] != -1)
+		close(current->pipe_fd[0]);
+		if (current->pipe_fd[1] != -1)
+		close(current->pipe_fd[1]);
+		
+		free(current); // Free the command struct itself
+		current = next;
+	}
+}
+
+t_cmd	*parse_tokens(t_token *tokens)
+{
+	t_cmd *cmds = NULL;
+	t_cmd *current_cmd = NULL;
+	int cmd_count = 0;
+
+	while (tokens)
+	{
+		// Create new command if needed
+		if (!current_cmd || tokens->type == T_PIPE)
+		{
+			cmd_add_back(&cmds, cmd_new());
+			current_cmd = cmd_last(cmds);
+			cmd_count++;
+		}
+
+		// Process current token
+		if (is_redirection(tokens->type))
+		{
+			//printf("Found redirection: %s\n", tokens->value);
+			handle_redirection_parser(&tokens, current_cmd);
+		}
+		else if (tokens->type == T_PIPE)
+		{
+			printf("Skipping pipe token\n");
+			tokens = tokens->next; // Move to next token after pipe
+		}
+		else
+		{
+			char *arg_copy = ft_strdup(tokens->value);
+			if (!arg_copy)
+			{
+				perror("minishell");
+				free_cmds(cmds);
+				free_tokens(tokens);
+				return (NULL);
+			}
+			add_arg_to_cmd(current_cmd, arg_copy);
+			tokens = tokens->next;
+		}
+	}
+
+	//print_parsed_commands(cmds);
+	return (cmds);
+}
+#include "inc/minishell.h"
+
+
+/**
+ * Dodaje przekierowanie do listy w komendzie.
+ */
+void	add_redir_to_cmd(t_cmd *cmd, t_redir *new_redir)
+{
+	if (!cmd->redirections)
+	{
+		cmd->redirections = new_redir;
+	}
+	else
+	{
+		t_redir *last = cmd->redirections;
+		while (last->next)
+		{
+			last = last->next;
+		}
+		last->next = new_redir;
+	}
+}
+
+t_cmd	*cmd_new(void)
+{
+	t_cmd *cmd = malloc(sizeof(t_cmd));
+	if (!cmd)
+		return (NULL);
+
+	cmd->args = NULL;
+	cmd->redirections = NULL;
+	cmd->next = NULL;
+	cmd->pipe_fd[0] = -1;
+	cmd->pipe_fd[1] = -1;
+
+	return (cmd);
+}
+
+t_cmd	*cmd_last(t_cmd *cmds)
+{
+	while (cmds && cmds->next)
+	{
+		cmds = cmds->next;
+	}
+	return (cmds);
+}
+
+// a pointer to a pointer allows the function to modify the head of the list (first element)
+// used to add a new command (new_cmd) t the end of the list of commands.
+// appends a new t_cmd structure to the list,
+//	it either reates the list if empty,
+// or adds to the end if the list already has elemensrs
+void	cmd_add_back(t_cmd **cmds, t_cmd *new_cmd)
+{
+	if (!*cmds)
+	{
+		*cmds = new_cmd;
+	}
+	else
+	{
+		t_cmd *last = cmd_last(*cmds);
+		last->next = new_cmd;
+	}
+}
+
+int	is_redirection(t_token_type type)
+{
+	return (type == T_REDIR_IN || type == T_REDIR_OUT || type == T_APPEND
+		|| type == T_HEREDOC);
+}
+
+void add_arg_to_cmd(t_cmd *cmd, char *arg)
+{
+    int count = 0;
+    char **new_args;
+
+    if (cmd->args)
+        while (cmd->args[count])
+            count++;
+
+    new_args = malloc(sizeof(char *) * (count + 2));
+    if (!new_args) {
+        perror("minishell");
+        exit(EXIT_FAILURE);  // Or handle more gracefully
+    }
+
+    for (int i = 0; i < count; i++)
+        new_args[i] = cmd->args[i];
+
+    new_args[count] = arg;
+    new_args[count + 1] = NULL;
+
+    if (cmd->args)
+        free(cmd->args);
+    cmd->args = new_args;
+}#include "inc/minishell.h"
+
+//"Volatile" forces the compiler to reload the variable every time it's accessed.
+
+volatile sig_atomic_t g_signal_flag = 0;
+volatile sig_atomic_t g_in_command = 0;
+
+void handle_sigint(int sig)
+{
+    (void)sig;
+    g_signal_flag = 1;
+    
+    if (g_in_command) {
+        // If we're running a command, just print newline
+        write(STDOUT_FILENO, "\n", 1);
+    } else {
+        // If we're at the prompt, redisplay it
+        write(STDOUT_FILENO, "\n", 1);
+        rl_on_new_line();
+        rl_replace_line("", 0);
+        rl_redisplay();
+    }
+}
+
+void	setup_signals(void)
+{
+	struct sigaction sa_int = {.sa_handler = handle_sigint};
+	sigaction(SIGINT, &sa_int, NULL);
+	signal(SIGQUIT, SIG_IGN); // Ctrl-\ nic nie robi
+}
+#include "inc/minishell.h"
+
+
+// Sprawdza, czy znak jest białym znakiem
+int	ft_isspace(char c)
+{
+	return (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f'
+		|| c == '\v');
+}
+
+// Łączy dwa stringi, zwalniając s1
+char	*ft_strjoin_free(char *s1, char *s2)
+{
+	char *result = ft_strjoin(s1, s2);
+	free(s1);
+	return (result);
+}
+
+// Dodaje pojedynczy znak do stringa
+char	*ft_strjoin_char(char *s, char c)
+{
+	int len = s ? ft_strlen(s) : 0;
+	char *new = malloc(len + 2); // +1 for char, +1 for '\0'
+	if (!new)
+		return (NULL);
+
+	if (s)
+		ft_memcpy(new, s, len);
+
+	new[len] = c;
+	new[len + 1] = '\0';
+
+	free(s);
+	return (new);
+}
+
+int	ft_strcmp(const char *s1, const char *s2)
+{
+	while (*s1 && (*s1 == *s2))
+	{
+		s1++;
+		s2++;
+	}
+	return (*(unsigned char *)s1 - *(unsigned char *)s2);
+}#include "inc/minishell.h"
+
+
+/**
+ * Łączy trzy stringi w jeden (np. "dir", "/", "cmd" → "dir/cmd").
+ * Zwraca nowy string lub NULL przy błędzie alokacji.
+ */
+char	*ft_strjoin3(const char *s1, const char *s2, const char *s3)
+{
+	char *tmp = ft_strjoin(s1, s2);
+	if (!tmp)
+		return (NULL);
+	char *result = ft_strjoin(tmp, s3);
+	free(tmp);
+	return (result);
+}
+
+/**
+ * Szuka pełnej ścieżki do komendy w zmiennej środowiskowej PATH.
+ * - cmd: nazwa komendy (np. "ls").
+ * - env: lista zmiennych środowiskowych.
+ * Zwraca: pełna ścieżka (malloc) lub NULL, jeśli nie znaleziono.
+ */
+char	*get_exec_path(char *cmd, t_env *env)
+{
+	if (!cmd || !env)
+		return (NULL);
+
+	// 1. Sprawdź, czy komenda jest już ścieżką bezwzględną/względną
+	if (ft_strchr(cmd, '/'))
+	{
+		return ((access(cmd, X_OK) == 0) ? ft_strdup(cmd) : NULL);
+	}
+
+	// 2. Pobierz wartość zmiennej PATH
+	char *path = get_env_value("PATH", env);
+	if (!path)
+		return (NULL);
+
+	// 3. Podziel PATH na katalogi
+	char **dirs = ft_split(path, ':');
+	if (!dirs)
+		return (NULL);
+
+	// 4. Przeszukaj każdy katalog w PATH
+	char *full_path = NULL;
+	for (int i = 0; dirs[i]; i++)
+	{
+		const char *dir = dirs[i];
+		if (dir[0] == '\0')
+			dir = "."; // Obsługa pustych ścieżek (np. PATH=:/bin)
+
+		full_path = ft_strjoin3(dir, "/", cmd);
+		if (!full_path)
+			continue ;
+
+		if (access(full_path, X_OK) == 0)
+		{
+			ft_free_split(dirs);
+			return (full_path);
+		}
+		free(full_path);
+		full_path = NULL;
+	}
+
+	ft_free_split(dirs);
+	return (NULL);
+}
+
+void	ft_free_split(char **split)
+{
+	if (!split)
+		return ;
+
+	for (int i = 0; split[i]; i++)
+	{
+		free(split[i]);
+	}
+	free(split);
+}/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   redirections.c                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/04/11 15:32:38 by hhurnik           #+#    #+#             */
+/*   Updated: 2025/04/22 19:02:42 by marvin           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "minishell.h"
+
+// dup - tworzy kopie file descriptora oldfd, using the lowest-numbered
+// unused file descriptor fot the new descriptor
+// dup2
+//	- to samo tylko uzywa konkretnego file descriptora podanego mu do funkcji
+// int dup2(int oldfd, int newfd);
+
+// < file
+// zamiast czytac z klawiatury (stdin), czytaj z tego file
+int	handle_input_redir(char *file)
+{
+	int	fd;
+
+	// otwor file in readonly
+	fd = open(file, O_RDONLY);
+	if (fd < 0)
+	{
+		perror(file); // print error jesli nie otworzy
+		return (-1);
+	}
+	// dup2 tu replaces stin (0) with the fd
+	// make newfd (0) point to the same thing oldfd points to
+	// first argument is the source, the second is the target
+	if (dup2(fd, STDIN_FILENO) < 0)
+	{
+		// on error -1 is returned
+		// on success the new fd is returned
+		perror("dup2");
+		close(fd);
+		return (-1);
+	}
+	close(fd);
+	return (0);
+}
+// > file
+// zamiast wypisywac na stdout, wypisz do file
+//| - bitwise OR
+int	handle_output_redir(char *file)
+{
+	// open or create a file if it doesnt exist for writing only
+	// jesli juz istnieje, truncate it - clears contents
+	// 0644 (rw-r--r--)
+	int fd = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	if (fd < 0)
+	{
+		perror(file);
+		return (-1);
+	}
+	if (dup2(fd, STDOUT_FILENO) < 0)
+	{
+		perror("dup2");
+		close(fd);
+		return (-1);
+	}
+	close(fd);
+	return (0);
+}
+// >>
+// O-APPEND - If set, the file offset shall be set to the end of the file prior
+// to each write
+// jak >, tylko nie nadpisuje zawartosci
+
+int	handle_append_redir(char *file)
+{
+	int	fd;
+
+	fd = open(file, O_WRONLY | O_CREAT | O_APPEND, 0644);
+	if (fd < 0)
+	{
+		perror(file);
+		return (-1);
+	}
+	if (dup2(fd, STDOUT_FILENO) < 0)
+	{
+		perror("dup2");
+		close(fd);
+		return (-1);
+	}
+	close(fd);
+	return (0);
+}
+
+int handle_heredoc(const char *delimiter)
+{
+    char *line = NULL;
+    int pipe_fd[2];
+
+    if (pipe(pipe_fd) == -1)
+    {
+        perror("pipe");
+        return (-1);
+    }
+
+    while (1)
+    {
+        line = readline("> ");
+        if (!line) // Handle Ctrl+D
+        {
+            write(1, "\n", 1);
+            break;
+        }
+
+        // Check if line matches delimiter (without newline)
+        if (ft_strcmp(line, delimiter) == 0)
+        {
+            free(line);
+            break;
+        }
+
+        // Write to pipe (with newline)
+        write(pipe_fd[1], line, strlen(line));
+        write(pipe_fd[1], "\n", 1);
+        free(line);
+    }
+
+    close(pipe_fd[1]);
+    return (pipe_fd[0]);
+}
+
+int	handle_heredoc_redir(char *delimiter)
+{
+	int fd = handle_heredoc(delimiter); // Call heredoc handler
+	if (fd < 0)
+		return (-1);
+	if (dup2(fd, STDIN_FILENO) < 0)
+	{
+		perror("dup2");
+		close(fd);
+		return (-1);
+	}
+	close(fd);
+	return (0);
+}
+
+int	setup_redirections(t_redir *redir_list)
+{
+	int	status;
+
+	while (redir_list)
+	{
+		status = 0;
+		if (redir_list->type == T_REDIR_IN)
+			status = handle_input_redir(redir_list->file);
+		else if (redir_list->type == T_REDIR_OUT)
+			status = handle_output_redir(redir_list->file);
+		else if (redir_list->type == T_APPEND)
+			status = handle_append_redir(redir_list->file);
+		else if (redir_list->type == T_HEREDOC)
+			status = handle_heredoc_redir(redir_list->file);
+		if (status < 0)
+			return (-1);
+		redir_list = redir_list->next;
+	}
+	return (0);
+}
+#include "../inc/minishell.h"
+
+t_env *env_new(const char *key, const char *value)
+{
+    t_env *new_var;
+    
+    new_var = (t_env *)malloc(sizeof(t_env));
+    if (!new_var)
+        return (NULL);
+    
+    new_var->key = ft_strdup(key);
+    if (!new_var->key)
+    {
+        free(new_var);
+        return (NULL);
+    }
+    
+    if (value)
+        new_var->value = ft_strdup(value);
+    else
+        new_var->value = ft_strdup("");
+    
+    if (!new_var->value)
+    {
+        free(new_var->key);
+        free(new_var);
+        return (NULL);
+    }
+    
+    new_var->next = NULL;
+    return (new_var);
+}
+
+t_env	*get_env(const char *key, t_env *env)
+{
+	while (env)
+	{
+		if (strcmp(env->key, key) == 0)
+			return (env);
+		env = env->next;
+	}
+	return (NULL);
+}
+
+char	*get_env_value5(const char *key, t_env *env)
+{
+	t_env	*var;
+
+	var = get_env(key, env);
+	if (!var)
+		return (NULL);
+	return (var->value);
+}
+
+int	update_pwds(t_env **env, char *old_pwd)
+{
+	t_env	*pwd_var;
+	t_env	*oldpwd_var;
+	char	*new_pwd;
+
+	pwd_var = get_env("PWD", *env);
+	oldpwd_var = get_env("OLDPWD", *env);
+	new_pwd = getcwd(NULL, 0);
+	if (!new_pwd)
+	{
+		perror("minishell: cd");
+		free(old_pwd);
+		return (ERROR);
+	}
+	// Update or create PWD
+	if (pwd_var)
+	{
+		free(pwd_var->value);
+		pwd_var->value = new_pwd;
+	}
+	else
+		env_add_back(env, env_new("PWD", new_pwd));
+	// Update or create OLDPWD
+	if (oldpwd_var)
+	{
+		free(oldpwd_var->value);
+		oldpwd_var->value = old_pwd;
+	}
+	else
+		env_add_back(env, env_new("OLDPWD", old_pwd));
+	return (SUCCESS);
+}
+
+int	handle_home_case(t_env **env, char **old_pwd)
+{
+	char	*home;
+
+	home = get_env_value5("HOME", *env);
+	if (!home)
+	{
+		ft_putstr_fd("minishell: cd: HOME not set\n", STDERR_FILENO);
+		return (ERROR);
+	}
+	*old_pwd = get_env_value5("PWD", *env);
+	if (!*old_pwd)
+		*old_pwd = getcwd(NULL, 0);
+	if (chdir(home) == -1)
+	{
+		perror("minishell: cd");
+		free(*old_pwd);
+		return (ERROR);
+	}
+	return (SUCCESS);
+}
+
+int	handle_dash_case(t_env **env, char **old_pwd)
+{
+	char	*oldpwd;
+
+	oldpwd = get_env_value5("OLDPWD", *env);
+	if (!oldpwd)
+	{
+		ft_putstr_fd("minishell: cd: OLDPWD not set\n", STDERR_FILENO);
+		return (ERROR);
+	}
+	*old_pwd = get_env_value5("PWD", *env);
+	if (!*old_pwd)
+		*old_pwd = getcwd(NULL, 0);
+	if (chdir(oldpwd) == -1)
+	{
+		perror("minishell: cd");
+		free(*old_pwd);
+		return (ERROR);
+	}
+	ft_putendl_fd(oldpwd, STDOUT_FILENO);
+	return (SUCCESS);
+}
+
+int	process_special_case(char *arg, t_env **env, char **old_pwd)
+{
+	if (!arg[0] || (arg[0] == '~' && (ft_isspace(arg[1]) || arg[1] == '\0')))
+		return (handle_home_case(env, old_pwd));
+	if (arg[0] == '-')
+		return (handle_dash_case(env, old_pwd));
+	if (arg[0] == '$')
+	{
+		t_env	*var;
+		char	*var_name = &arg[1];
+		
+		var = get_env(var_name, *env);
+		if (!var || !var->value)
+		{
+			ft_putstr_fd("minishell: cd: ", STDERR_FILENO);
+			ft_putstr_fd(var_name, STDERR_FILENO);
+			ft_putstr_fd(" not set\n", STDERR_FILENO);
+			return (ERROR);
+		}
+		*old_pwd = getcwd(NULL, 0);
+		if (chdir(var->value) == -1)
+		{
+			perror("minishell: cd");
+			free(*old_pwd);
+			return (ERROR);
+		}
+		return (SUCCESS);
+	}
+	return (CONTINUE);
+}
+
+int			bi_cd(char **args, t_env **env)
+{
+	char	*path;
+	char	*old_pwd;
+	int		special_case_result;
+
+	if (args[1] && args[2])
+		return (ft_putstr_fd("minishell: cd: too many arguments\n", STDERR_FILENO), ERROR);
+	old_pwd = getcwd(NULL, 0);
+	if (!old_pwd)
+		old_pwd = ft_strdup(get_env_value5("PWD", *env));
+	// Handle special cases (~, -, $VAR)
+	if (args[1])
+	{
+		special_case_result = process_special_case(args[1], env, &old_pwd);
+		if (special_case_result != CONTINUE)
+			return (special_case_result == SUCCESS ? update_pwds(env, old_pwd) : ERROR);
+	}
+	// Handle regular path
+	path = args[1];
+	if (!path) // cd without arguments
+		return (handle_home_case(env, &old_pwd) == SUCCESS ? update_pwds(env, old_pwd) : ERROR);
+	// Handle ~/path case
+	if (path[0] == '~' && path[1] == '/')
+	{
+		char	*home = get_env_value5("HOME", *env);
+		if (!home)
+			return (ft_putstr_fd("minishell: cd: HOME not set\n", STDERR_FILENO), free(old_pwd), ERROR);
+		path = ft_strjoin(home, &path[1]);
+	}
+	else
+		path = ft_strdup(path);
+	if (chdir(path) == -1)
+	{
+		perror("minishell: cd");
+		free(path);
+		free(old_pwd);
+		return (ERROR);
+	}
+	free(path);
+	return (update_pwds(env, old_pwd));
+}#include "../inc/minishell.h"
+
+
+int	bi_echo(char *argv[])
+{
+	int i = 1;       // bez argumentow i tak wypisze \n
+	int newline = 1; // domyślnie wypisujemy nową linię na koncu
+
+	// Obsługa -n (może być kilka, tak dziala echo -n w bashu: -n, -nnnn)
+	// akceptuje -n -n -nnn -nnn  "something" - wypisuje tylko somehtign
+	while (argv[i] && ft_strncmp(argv[i], "-n", 2) == 0)
+	{
+		int j = 2;
+		while (argv[i][j] == 'n')
+			j++;
+		if (argv[i][j] == '\0') // tylko -n lub -nnn...
+		{
+			newline = 0;
+			i++;
+		}
+		else
+			break ;
+	}
+
+	// Wypisz argumenty oddzielone spacją
+	while (argv[i])
+	{
+		write(1, argv[i], ft_strlen(argv[i]));
+		if (argv[i + 1])
+			write(1, " ", 1); /// wypisuje spacjw pomiedy, ale nie na koncu
+		i++;
+	}
+
+	if (newline)
+		write(1, "\n", 1);
+
+	return (0);
+}
+#include "../inc/minishell.h"
+
+
+/**
+ * env builtin command - wypisuje all env variables
+ * Format: NAME=VALUE (one per line)
+ */
+int bi_env(char **args, t_env **env)
+{
+    t_env *current;
+    
+    // Check for unsupported options/arguments
+    if (args[1])
+    {
+        ft_putstr_fd("env: too many arguments\n", STDERR_FILENO);
+        return (ERROR);
+    }
+    
+    // Print all env variables
+    current = *env;
+    while (current)
+    {
+        // wypis tylko variables with values (standard env behavior)
+        if (current->value && current->value[0] != '\0')
+        {
+            ft_putstr_fd(current->key, STDOUT_FILENO);
+            ft_putstr_fd("=", STDOUT_FILENO);
+            ft_putstr_fd(current->value, STDOUT_FILENO);
+            ft_putstr_fd("\n", STDOUT_FILENO);
+        }
+        
+        current = current->next;
+    }
+    return (SUCCESS);
+}/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   bi_exit.c                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/03/24 20:19:34 by hhurnik           #+#    #+#             */
+/*   Updated: 2025/04/22 18:43:56 by marvin           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "../inc/minishell.h"
+
+void	write_stderr(char *str)
+{
+	write(2, str, ft_strlen(str));
+}
+
+int	is_integer(char *str)
+{
+	int	i;
+
+	i = 0;
+	if (str[i] == '-' || str[i] == '+')
+		i++;
+	while (str[i])
+	{
+		if (str[i] < '0' || str[i] > '9')
+			return (0);
+		i++;
+	}
+	return (1);
+}
+
+int bi_exit(char *argv[], t_env *env)
+{
+    int exit_code = g_exit_status;
+
+    ft_putstr_fd("exit\n", STDOUT_FILENO); //? leave it?
+
+    if (argv[1] && argv[2])
+    {
+        write_stderr("exit: too many arguments\n");
+        g_exit_status = 1;
+        return (1);
+    }
+
+    if (argv[1])
+    {
+        if (is_integer(argv[1]))
+        {
+            exit_code = ft_atoi(argv[1]);
+            // bash calculates exit code modulo 256
+            exit_code = exit_code % 256;
+            if (exit_code < 0) // Ensure positive result if % gives negative
+                exit_code += 256;
+        }
+        else
+        {
+            write_stderr("exit: numeric argument required\n");
+            exit_code = 2;
+        }
+    }
+
+    cleanup(env, NULL, NULL, NULL); // passass NULL for tokens/cmds/input cause they are cleaned by main loop normally
+    exit(exit_code);
+}
+
+
+// without arguments it lists all environment variables that are marked
+// why use export? because by default, shell variables are local to the shell,
+// when you export them, you make them part of the environment,
+//	which is passed to child processes like ls, vim, gcc
+
+#include "../inc/minishell.h"
+
+
+
+//calculate the length of an environment variable's value
+
+size_t env_len(t_env *env)
+{
+    if (!env || !env->value)
+        return (0);
+    return (ft_strlen(env->value));
+}
+
+//calculate the length of an environment variable's key
+
+size_t env_key_len(t_env *env)
+{
+    if (!env || !env->key)
+        return (0);
+    return (ft_strlen(env->key));
+}
+
+//print all environment variables in export format
+//format: declare -x KEY="VALUE"
+void print_env_export_format(t_env *env)
+{
+    while (env)
+    {
+        ft_putstr_fd("declare -x ", STDOUT_FILENO);
+        ft_putstr_fd(env->key, STDOUT_FILENO);
+        ft_putstr_fd("=\"", STDOUT_FILENO);
+        ft_putstr_fd(env->value, STDOUT_FILENO);
+        ft_putstr_fd("\"\n", STDOUT_FILENO);
+        env = env->next;
+    }
+}
+
+//Add or update an environment variable
+int set_env_var(const char *var, t_env **env)
+{
+    char *key;
+    char *value;
+    char *equals;
+    t_env *existing;
+    
+    // Find "=" to separate key and value
+    equals = ft_strchr(var, '=');
+    if (!equals)
+    {
+        //nooo equals sign, just mark for export (already in env)
+        key = ft_strdup(var);
+        value = ft_strdup("");
+    }
+    else
+    {
+        // extract key and value
+        key = ft_substr(var, 0, equals - var);
+        value = ft_strdup(equals + 1);
+    }
+    
+    if (!key || !value)
+    {
+        free(key);
+        free(value);
+        return (ERROR);
+    }
+    
+    // check if variable already exists
+    existing = get_env(key, *env);
+    if (existing)
+    {
+        // update existing variable
+        if (equals)  // only update value if '=' was given
+        {
+            free(existing->value);
+            existing->value = value;
+        }
+        free(key);
+    }
+    else
+    {
+        // Add new variable
+        env_add_back(env, env_new(key, value));
+        free(key);
+        free(value);
+    }
+    
+    return (SUCCESS);
+}
+
+
+
+//export with no options
+//If no arguments, print all env variables in export format
+//otherwise, set or update variables in the environment
+int bi_export(char **args, t_env **env)
+ {
+	 int i;
+	 int status;
+	 
+	 if (!env)
+		 return (ERROR);
+	 
+	 // no arguments - print all variables in export format
+	 if (!args[1])
+	 {
+		 print_env_export_format(*env);
+		 return (SUCCESS);
+	 }
+	 
+	 // with arguments - add or update variables
+	 status = SUCCESS;
+	 i = 1;
+	 while (args[i])
+	 {
+		 if (!is_valid_identifier(args[i]))
+		 {
+			 ft_putstr_fd("minishell: export: `", STDERR_FILENO);
+			 ft_putstr_fd(args[i], STDERR_FILENO);
+			 ft_putstr_fd("': not a valid identifier\n", STDERR_FILENO);
+			 status = ERROR;
+		 }
+		 else
+		 {
+			 if (set_env_var(args[i], env) != SUCCESS)
+				 status = ERROR;
+		 }
+		 i++;
+	 }
+	 
+	 return (status);
+ }
+
+#include "../inc/minishell.h"
+
+int	bi_pwd(char *argv[])
+{
+	// check if there are any arguments other than the command 
+	if (argv[1])
+	{
+		ft_putstr_fd("pwd: too many arguments\n", STDERR_FILENO);
+		return (1);                                                
+	}
+
+	char cwd[PATH_MAX]; //buffer to store the current directory path
+	//get the current working directory
+	if (getcwd(cwd, sizeof(cwd)) != NULL)
+	{
+		ft_putstr_fd(cwd, STDOUT_FILENO);  // print the current directory
+		ft_putstr_fd("\n", STDOUT_FILENO); // print newline
+		return (0); //successs
+	}
+
+	//if getcwd fails, print the error
+	perror("minishell: pwd");
+	return (1);
+}
+#include "../inc/minishell.h"
+
+//check if a variable name is valid for unset
+//valid names: start with letter or underscore, then letters, numbers or underscores
+int is_valid_identifier(char *name)
+{
+    int i;
+    
+    if (!name || !*name)
+        return (0);
+    
+    // First character must be letter or underscore
+    if (!ft_isalpha(name[0]) && name[0] != '_')
+        return (0);
+    
+    // Remaining characters must be letters, digits or underscores
+    i = 1;
+    while (name[i])
+    {
+        if (!ft_isalnum(name[i]) && name[i] != '_')
+            return (0);
+        i++;
+    }
+    
+    return (1);
+}
+
+/**
+ * Remove an environment variable from the linked list
+ */
+int remove_env_var(char *varname, t_env **env)
+{
+    t_env *current;
+    t_env *previous;
+    
+    if (!env || !*env || !varname)
+        return (ERROR);
+    
+    current = *env;
+    previous = NULL;
+    
+    // Find the variable in the linked list
+    while (current)
+    {
+        // Compare variable names exactly (not just a prefix)
+        if (ft_strcmp(current->key, varname) == 0)
+        {
+            // Remove from beginning of list
+            if (previous == NULL)
+                *env = current->next;
+            // Remove from middle/end of list
+            else
+                previous->next = current->next;
+                
+            // Free node memory
+            free(current->key);
+            free(current->value);
+            free(current);
+            return (SUCCESS);
+        }
+        
+        previous = current;
+        current = current->next;
+    }
+    
+    return (SUCCESS); // Variable not found, not an error
+}
+
+/**
+ * Unset environment variables (no options supported)
+ */
+int bi_unset(char **args, t_env **env)
+{
+    int i;
+    int status;
+    
+    status = SUCCESS;
+    
+    // No arguments is not an error
+    if (!args[1])
+        return (SUCCESS);
+    
+    i = 1;
+    while (args[i])
+    {
+        if (!is_valid_identifier(args[i]))
+        {
+            ft_putstr_fd("minishell: unset: `", STDERR_FILENO);
+            ft_putstr_fd(args[i], STDERR_FILENO);
+            ft_putstr_fd("': not a valid identifier\n", STDERR_FILENO);
+            status = ERROR;
+        }
+        else
+            remove_env_var(args[i], env);
+        
+        i++;
+    }
+    
+    return (status);
+}
+
+#ifndef MINISHELL_H
+# define MINISHELL_H
+
+# include "../libft/libft.h"
+# include <fcntl.h>
+# include <limits.h>
+# include <readline/history.h>
+# include <readline/readline.h>
+# include <signal.h>
+# include <stdbool.h>
+# include <stdint.h>
+# include <stdio.h>
+# include <sys/signal.h>
+# include <sys/types.h>
+# include <sys/wait.h>
+# include <unistd.h>
+
+// constants
+# define SUCCESS 0
+# define ERROR 1
+# define CMD_NOT_FOUND 127     // moze do skorzystania
+# define PERMISSION_DENIED 126 // same
+#define ERROR_cd -1
+#define SUCCESS 0
+#define DOLLAR '$'
+#define CONTINUE 2
+
+extern int g_exit_status;
+extern volatile sig_atomic_t g_in_command;
+
+
+// ------------------------------------------
+// Struktury danych
+// ------------------------------------------
+
+typedef struct s_env
+{
+	char *key;
+	char *value;
+	struct s_env *next;
+} t_env;
+
+typedef enum e_token_type
+{
+	T_WORD,
+	T_PIPE,
+	T_REDIR_IN,
+	T_REDIR_OUT,
+	T_APPEND,
+	T_HEREDOC,
+	T_SINGLE_QUOTED,
+	T_DOUBLE_QUOTED,
+} t_token_type;
+
+typedef enum e_quote
+{
+	NO_QUOTE,
+	SINGLE_QUOTE,
+	DOUBLE_QUOTE
+} t_quote;
+
+typedef struct s_token
+{
+	char *value;
+	t_token_type type;
+	struct s_token *next;
+} t_token;
+
+typedef struct s_redir
+{
+	char *file;
+	t_token_type type;
+	struct s_redir *next;
+} t_redir;
+
+typedef struct s_cmd
+{
+	char **args;
+	t_redir *redirections;
+	struct s_cmd *next;
+	int pipe_fd[2];
+} t_cmd;
+
+// ------------------------------------------
+// Prototypy funkcji
+// ------------------------------------------
+
+//builtin_handler.c
+int	is_builtin(char *cmd);
+int	execute_builtin(char **args, t_env **env);
+int run_builtin(t_cmd *cmd, t_env **env);
+
+
+//env_utils.c
+t_env *env_new_no_dup(char *key, char *value) ;
+void	env_add_back(t_env **env, t_env *new_node);
+t_env	*init_env(char **envp);
+void init_env2(char **envp, t_env **env);
+void free_env_list(t_env *env);
+char	*get_env_value(char *key, t_env *env);
+void	update_pwd_env(t_env **env);
+
+
+//executor_utils.c
+char	**env_to_arr(t_env *env);
+
+
+//executor.c
+void	restore_std_fds(int stdin_copy, int stdout_copy);
+void execute(t_cmd *cmds, t_env **env);
+void	handle_redirections(t_cmd *cmd);
+void	close_pipes(t_cmd *cmds);
+void cleanup(t_env *env, t_token *tokens, t_cmd *cmds, char *input);
+
+
+//expander.c
+char	*extract_var_name(char *str);
+void expand_variables(t_token *tokens, t_env *env);
+char	*expand_str(char *str, t_env *env);
+
+
+//lexer.c
+void	add_token(t_token **tokens, char *value, t_token_type type);
+t_token	*reverse_tokens(t_token *tokens);
+void	free_tokens(t_token *tokens);
+char	*read_quoted_content(char *input, int *i, t_quote quote, int *error);
+t_token	*tokenize_input(char *input);
+void handle_redirection(char *input, int *i, t_token **tokens);
+
+//main.c
+void free_env(t_env *env);
+
+
+//parser_utils.c
+void	add_redir_to_cmd(t_cmd *cmd, t_redir *new_redir);
+t_cmd	*cmd_new(void);
+t_cmd	*cmd_last(t_cmd *cmds);
+void	cmd_add_back(t_cmd **cmds, t_cmd *new_cmd);
+int	is_redirection(t_token_type type);
+void add_arg_to_cmd(t_cmd *cmd, char *arg);
+
+//parser.c
+void	handle_redirection_parser(t_token **tokens, t_cmd *cmd);
+void	print_parsed_commands(t_cmd *cmds);  ////for debugging, to be removed
+void	free_cmds(t_cmd *cmds);
+t_cmd	*parse_tokens(t_token *tokens);
+
+//signals.c
+void handle_sigint(int sig);
+void	setup_signals(void);
+
+//utils.c
+int	ft_isspace(char c);
+char	*ft_strjoin_free(char *s1, char *s2);
+char	*ft_strjoin_char(char *s, char c);
+int	ft_strcmp(const char *s1, const char *s2);
+
+
+//utils2.c
+char	*ft_strjoin3(const char *s1, const char *s2, const char *s3);
+char	*get_exec_path(char *cmd, t_env *env);
+void	ft_free_split(char **split);
+
+
+//--------------BUILTINS--------------
+
+//bi_cd.c
+t_env *env_new(const char *key, const char *value);
+t_env	*get_env(const char *key, t_env *env);
+char	*get_env_value5(const char *key, t_env *env);
+int	update_pwds(t_env **env, char *old_pwd);
+int	handle_home_case(t_env **env, char **old_pwd);
+int	handle_dash_case(t_env **env, char **old_pwd);
+int	process_special_case(char *arg, t_env **env, char **old_pwd);
+int			bi_cd(char **args, t_env **env);
+
+
+//bi_echo.c
+int	bi_echo(char *argv[]);
+
+//bi_env.c
+int bi_env(char **args, t_env **env);
+
+//bi_exit.c
+void	write_stderr(char *str);
+int	is_integer(char *str);
+int bi_exit(char *argv[], t_env *env);
+
+//bi_export.c
+size_t env_len(t_env *env);
+size_t env_key_len(t_env *env);
+void print_env_export_format(t_env *env);
+int set_env_var(const char *var, t_env **env);
+int bi_export(char **args, t_env **env);
+
+//bi_pwd.c
+int	bi_pwd(char *argv[]);
+
+//bi_unset.c
+int is_valid_identifier(char *name);
+int remove_env_var(char *varname, t_env **env);
+int bi_unset(char **args, t_env **env);
+
+
+
+////--------------REDIRECTIONS----------------
+int	handle_input_redir(char *file);
+int	handle_output_redir(char *file);
+int	handle_append_redir(char *file);
+int handle_heredoc(const char *delimiter);
+int	handle_heredoc_redir(char *delimiter);
+int	setup_redirections(t_redir *redir_list);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#endif
+
+///valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./main
