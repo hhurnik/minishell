@@ -1,41 +1,37 @@
 #include "../inc/minishell.h"
 
-t_env *env_new(const char *key, const char *value)
+t_env	*env_new(const char *key, const char *value)
 {
-    t_env *new_var;
-    
-    new_var = (t_env *)malloc(sizeof(t_env));
-    if (!new_var)
-        return (NULL);
-    
-    new_var->key = ft_strdup(key);
-    if (!new_var->key)
-    {
-        free(new_var);
-        return (NULL);
-    }
-    
-    if (value)
-        new_var->value = ft_strdup(value);
-    else
-        new_var->value = ft_strdup("");
-    
-    if (!new_var->value)
-    {
-        free(new_var->key);
-        free(new_var);
-        return (NULL);
-    }
-    
-    new_var->next = NULL;
-    return (new_var);
+	t_env	*new_var;
+
+	new_var = (t_env *)malloc(sizeof(t_env));
+	if (!new_var)
+		return (NULL);
+	new_var->key = ft_strdup(key);
+	if (!new_var->key)
+	{
+		free(new_var);
+		return (NULL);
+	}
+	if (value)
+		new_var->value = ft_strdup(value);
+	else
+		new_var->value = ft_strdup("");
+	if (!new_var->value)
+	{
+		free(new_var->key);
+		free(new_var);
+		return (NULL);
+	}
+	new_var->next = NULL;
+	return (new_var);
 }
 
 t_env	*get_env(const char *key, t_env *env)
 {
 	while (env)
 	{
-		if (strcmp(env->key, key) == 0)
+		if (ft_strcmp(env->key, key) == 0)
 			return (env);
 		env = env->next;
 	}
@@ -56,7 +52,7 @@ int	update_pwds(t_env **env, char *old_pwd)
 {
 	t_env	*pwd_var;
 	t_env	*oldpwd_var;
-	char	*new_pwd;
+	char *new_pwd;
 
 	pwd_var = get_env("PWD", *env);
 	oldpwd_var = get_env("OLDPWD", *env);
@@ -88,7 +84,7 @@ int	update_pwds(t_env **env, char *old_pwd)
 
 int	handle_home_case(t_env **env, char **old_pwd)
 {
-	char	*home;
+	char *home;
 
 	home = get_env_value5("HOME", *env);
 	if (!home)
@@ -110,7 +106,7 @@ int	handle_home_case(t_env **env, char **old_pwd)
 
 int	handle_dash_case(t_env **env, char **old_pwd)
 {
-	char	*oldpwd;
+	char *oldpwd;
 
 	oldpwd = get_env_value5("OLDPWD", *env);
 	if (!oldpwd)
@@ -139,9 +135,9 @@ int	process_special_case(char *arg, t_env **env, char **old_pwd)
 		return (handle_dash_case(env, old_pwd));
 	if (arg[0] == '$')
 	{
-		t_env	*var;
-		char	*var_name = &arg[1];
-		
+		t_env *var;
+		char *var_name = &arg[1];
+
 		var = get_env(var_name, *env);
 		if (!var || !var->value)
 		{
@@ -162,14 +158,15 @@ int	process_special_case(char *arg, t_env **env, char **old_pwd)
 	return (CONTINUE);
 }
 
-int			bi_cd(char **args, t_env **env)
+int	bi_cd(char **args, t_env **env)
 {
-	char	*path;
-	char	*old_pwd;
-	int		special_case_result;
+	char *path;
+	char *old_pwd;
+	int special_case_result;
 
 	if (args[1] && args[2])
-		return (ft_putstr_fd("minishell: cd: too many arguments\n", STDERR_FILENO), ERROR);
+		return (ft_putstr_fd("minishell: cd: too many arguments\n",
+				STDERR_FILENO), ERROR);
 	old_pwd = getcwd(NULL, 0);
 	if (!old_pwd)
 		old_pwd = ft_strdup(get_env_value5("PWD", *env));
@@ -187,9 +184,10 @@ int			bi_cd(char **args, t_env **env)
 	// Handle ~/path case
 	if (path[0] == '~' && path[1] == '/')
 	{
-		char	*home = get_env_value5("HOME", *env);
+		char *home = get_env_value5("HOME", *env);
 		if (!home)
-			return (ft_putstr_fd("minishell: cd: HOME not set\n", STDERR_FILENO), free(old_pwd), ERROR);
+			return (ft_putstr_fd("minishell: cd: HOME not set\n",
+					STDERR_FILENO), free(old_pwd), ERROR);
 		path = ft_strjoin(home, &path[1]);
 	}
 	else

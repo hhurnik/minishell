@@ -16,13 +16,14 @@ void free_env(t_env *env)
     }
 }
 
+
 int main(int argc, char **argv, char **envp)
 {
     (void)argc;
     (void)argv;
     int exit_status_on_eof = 0; // Store exit status if needed
 
-    setup_signals();
+    setup_signals_for_prompt(); // Set up signal handling for the prompt
     t_env *env = NULL;
     init_env2(envp, &env);
 
@@ -61,10 +62,11 @@ int main(int argc, char **argv, char **envp)
                 // free_tokens(tokens); // Already freed in parse_tokens error path? Double check.
                 // tokens = NULL;       // Or handle error from parse_tokens better
             }
-             else if (cmds && cmds->args && cmds->args[0])
+            else if (cmds && cmds->args && cmds->args[0])
             {
-                // Pass input and tokens to execute/builtins if they need it for cleanup
+                setup_signals_for_command(); // Set up signal handling for command execution
                 execute(cmds, &env);
+                setup_signals_for_prompt(); // Restore signal handling for the prompt
             }
         }
 

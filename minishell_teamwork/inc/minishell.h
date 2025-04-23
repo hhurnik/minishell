@@ -26,7 +26,7 @@
 #define CONTINUE 2
 
 extern int g_exit_status;
-extern volatile sig_atomic_t g_in_command;
+//extern volatile sig_atomic_t g_in_command;
 
 
 // ------------------------------------------
@@ -148,6 +148,9 @@ t_cmd	*parse_tokens(t_token *tokens);
 //signals.c
 void handle_sigint(int sig);
 void	setup_signals(void);
+
+void setup_signals_for_command(void);
+void setup_signals_for_prompt(void); 
 
 //utils.c
 int	ft_isspace(char c);

@@ -7,12 +7,133 @@ void	restore_std_fds(int stdin_copy, int stdout_copy)
 	close(stdin_copy);
 	close(stdout_copy);
 }
+/// poprzednia wersja dziala ale odpala 2 minishell jesli bez globalnych
+// void execute(t_cmd *cmds, t_env **env)
+// {
+//     // Set flag that we're in a command
+//     //g_in_command = 1;
+    
+//     int stdin_copy = dup(STDIN_FILENO);
+//     int stdout_copy = dup(STDOUT_FILENO);
+//     int status;
+//     int prev_pipe_read = -1;
+
+//     if (!cmds || !cmds->args || !cmds->args[0])
+//     {
+//         ft_putstr_fd("minishell: null command\n", STDERR_FILENO);
+//         //g_in_command = 0;  // Reset the flag before returning
+//         return;
+//     }
+
+//     // Builtin in parent process if no pipes
+//     if (is_builtin(cmds->args[0]) && !cmds->next)
+//     {
+//         handle_redirections(cmds);
+//         g_exit_status = run_builtin(cmds, env);
+//         restore_std_fds(stdin_copy, stdout_copy);
+//         //g_in_command = 0;  // Reset the flag before returning
+//         return;
+//     }
+
+//     // Continue forking path (pipelines or non-builtin)
+//     while (cmds)
+//     {
+//         int pipe_fd[2] = {-1, -1};
+        
+//         // Create pipe if there's a next command
+//         if (cmds->next && pipe(pipe_fd) == -1)
+//         {
+//             perror("minishell: pipe");
+//             break;
+//         }
+
+//         pid_t pid = fork();
+//         if (pid == -1)
+//         {
+//             perror("minishell: fork");
+//             if (pipe_fd[0] != -1) close(pipe_fd[0]);
+//             if (pipe_fd[1] != -1) close(pipe_fd[1]);
+//             break;
+//         }
+//         else if (pid == 0)  // Child process
+//         {
+//             // Set up input from previous command if needed
+//             if (prev_pipe_read != -1)
+//             {
+//                 dup2(prev_pipe_read, STDIN_FILENO);
+//                 close(prev_pipe_read);
+//             }
+            
+//             // Set up output to next command if needed
+//             if (cmds->next)
+//             {
+//                 dup2(pipe_fd[1], STDOUT_FILENO);
+//             }
+            
+//             // Close unused pipe ends
+//             if (pipe_fd[0] != -1) close(pipe_fd[0]);
+//             if (pipe_fd[1] != -1) close(pipe_fd[1]);
+
+//             handle_redirections(cmds);
+
+//             // If it's a builtin, run it in the child process
+//             if (is_builtin(cmds->args[0]))
+//             {
+//                 exit(run_builtin(cmds, env));
+//             }
+//             else  // External command
+//             {
+//                 // Ensure the environment is up to date for the child
+//                 char *path = get_exec_path(cmds->args[0], *env);
+//                 char **env_arr = env_to_arr(*env);
+
+//                 // Execute the command
+//                 if (path)
+//                     execve(path, cmds->args, env_arr);
+//                 else
+//                     execvp(cmds->args[0], cmds->args);  // Try direct execution as fallback
+                    
+//                 perror("minishell");
+//                 exit(127);  // Command not found
+//             }
+//         }
+
+//         // Parent process
+        
+//         // Close previous pipe input if we had one
+//         if (prev_pipe_read != -1)
+//             close(prev_pipe_read);
+        
+//         // Set up for next iteration
+//         if (cmds->next)
+//         {
+//             prev_pipe_read = pipe_fd[0];  // Save read end for next command
+//             close(pipe_fd[1]);            // Close write end in parent
+//         }
+//         else if (pipe_fd[0] != -1)
+//         {
+//             // Last command, close any remaining pipe ends
+//             close(pipe_fd[0]);
+//         }
+
+//         cmds = cmds->next;
+//     }
+
+//     // Wait for all child processes to finish
+//     while (waitpid(-1, &status, 0) > 0)
+//     {
+//         if (WIFEXITED(status))
+//             g_exit_status = WEXITSTATUS(status);
+//     }
+
+//     // At the end of function
+//     //g_in_command = 0;  // Reset the flag
+//     restore_std_fds(stdin_copy, stdout_copy);
+// }
+
 
 void execute(t_cmd *cmds, t_env **env)
 {
-    // Set flag that we're in a command
-    g_in_command = 1;
-    
     int stdin_copy = dup(STDIN_FILENO);
     int stdout_copy = dup(STDOUT_FILENO);
     int status;
@@ -21,26 +142,24 @@ void execute(t_cmd *cmds, t_env **env)
     if (!cmds || !cmds->args || !cmds->args[0])
     {
         ft_putstr_fd("minishell: null command\n", STDERR_FILENO);
-        g_in_command = 0;  // Reset the flag before returning
         return;
     }
 
-    // Builtin in parent process if no pipes
+    // Handle built-in commands in the parent process if no pipes
     if (is_builtin(cmds->args[0]) && !cmds->next)
     {
         handle_redirections(cmds);
         g_exit_status = run_builtin(cmds, env);
         restore_std_fds(stdin_copy, stdout_copy);
-        g_in_command = 0;  // Reset the flag before returning
         return;
     }
 
     // Continue forking path (pipelines or non-builtin)
     while (cmds)
     {
+        setup_signals_for_command(); // Set signal handling for command execution
+
         int pipe_fd[2] = {-1, -1};
-        
-        // Create pipe if there's a next command
         if (cmds->next && pipe(pipe_fd) == -1)
         {
             perror("minishell: pipe");
@@ -55,64 +174,57 @@ void execute(t_cmd *cmds, t_env **env)
             if (pipe_fd[1] != -1) close(pipe_fd[1]);
             break;
         }
-        else if (pid == 0)  // Child process
+        else if (pid == 0) // Child process
         {
-            // Set up input from previous command if needed
+            signal(SIGINT, SIG_DFL); // Restore default SIGINT behavior in child
+            signal(SIGQUIT, SIG_DFL); // Restore default SIGQUIT behavior in child
+
             if (prev_pipe_read != -1)
             {
                 dup2(prev_pipe_read, STDIN_FILENO);
                 close(prev_pipe_read);
             }
-            
-            // Set up output to next command if needed
+
             if (cmds->next)
             {
                 dup2(pipe_fd[1], STDOUT_FILENO);
             }
-            
-            // Close unused pipe ends
+
             if (pipe_fd[0] != -1) close(pipe_fd[0]);
             if (pipe_fd[1] != -1) close(pipe_fd[1]);
 
             handle_redirections(cmds);
 
-            // If it's a builtin, run it in the child process
             if (is_builtin(cmds->args[0]))
             {
                 exit(run_builtin(cmds, env));
             }
-            else  // External command
+            else
             {
-                // Ensure the environment is up to date for the child
                 char *path = get_exec_path(cmds->args[0], *env);
                 char **env_arr = env_to_arr(*env);
 
-                // Execute the command
                 if (path)
                     execve(path, cmds->args, env_arr);
                 else
-                    execvp(cmds->args[0], cmds->args);  // Try direct execution as fallback
-                    
+                    execvp(cmds->args[0], cmds->args);
+
                 perror("minishell");
-                exit(127);  // Command not found
+                exit(127);
             }
         }
 
         // Parent process
-        
-        // Close previous pipe input if we had one
         if (prev_pipe_read != -1)
             close(prev_pipe_read);
-        
-        // Set up for next iteration
+
         if (cmds->next)
         {
-            prev_pipe_read = pipe_fd[0];  // Save read end for next command
-            close(pipe_fd[1]);            // Close write end in parent
+            prev_pipe_read = pipe_fd[0];
+            close(pipe_fd[1]);
         }
         else if (pipe_fd[0] != -1)
         {
-            // Last command, close any remaining pipe ends
             close(pipe_fd[0]);
         }
 
@@ -126,10 +238,10 @@ void execute(t_cmd *cmds, t_env **env)
             g_exit_status = WEXITSTATUS(status);
     }
 
-    // At the end of function
-    g_in_command = 0;  // Reset the flag
+    setup_signals_for_prompt(); // Restore signal handling for the prompt
     restore_std_fds(stdin_copy, stdout_copy);
 }
+
 
 void	handle_redirections(t_cmd *cmd)
 {
