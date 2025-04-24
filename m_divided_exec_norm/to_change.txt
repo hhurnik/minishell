@@ -1,0 +1,47 @@
+---- OK FROM NORMINETTE, JUST REMOVE COMMENTS LATER -----
+---- NOT OKAY - LINES TOO LONG --------------------------
+
+1. builtin_handler.c    OK
+2. env_utils.c          NOT OKAY
+2. execution.c          OK
+3. executor_utils.c     OK
+4. executor.C           OK
+5. expander.c           NOT OKAY - expand_str - 65 lines
+6. lexer.C              NOT OKAY
+7. main.c               NOT OKAY
+8. parser_utils.C       OK
+9. parser_utils2.C      OK
+10. parser.C            NOT OKAY
+11. pipes.C             OK
+12. signals.C           OK
+13. utils.C             OK
+14. utils2.C            NOT OKAY - get_exec_path function 42 lines
+
+
+BUILTINS:
+1. bi_cd.C              NOT OKAY
+2. bi_echo.C            OK
+3. bi_env.C             OK
+4. bi_exit.C            OK
+5. bi_export.C          NOT OKAY
+6. bi_pwd.C             OK
+7. bi_unset.c           OK (po usunieciu komentarzy)
+
+REDIRECTIONS:
+
+1. input_output_append.c OK
+2. heredoc.C             OK
+3. redirs_execute.C      OK
+
+
+HEADER:
+minishell.h              OK
+
+
+
+
+
+
+
+
+
