@@ -27,7 +27,7 @@ BUILTINS:
 2. bi_echo.C            OK
 3. bi_env.C             OK
 4. bi_exit.C            OK
-5. bi_export.C          NOT OKAY
+5. bi_export.C          OK
 6. bi_pwd.C             OK
 7. bi_unset.c           OK (po usunieciu komentarzy)
 
@@ -51,5 +51,5 @@ NOTES:
 2. divided main in main, dodalam brakujacy kod w loopach
 3. history stopped working after dividing main - juz naprawione
 4. bi_cd podzielone na bi_utils.c, bi_cd_special_case.c, bi_cd.c
-
+5. is_valid_identifier() functions in both export.c and unset.c
 
