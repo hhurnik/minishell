@@ -134,7 +134,6 @@ int		handle_env_node_creation(char *key, char *value, t_env **env);
 int		process_single_env_var(char *env_var, t_env **env);
 void	init_env(char **envp, t_env **env);
 
-
 // executor_utils.c
 int		count_env_nodes(t_env *env);
 char	*create_env_entry(t_env *node);
@@ -160,7 +159,7 @@ void	free_env(t_env *env);
 void	init_shell(char **envp, t_env **env);
 void	handle_eof(t_env *env, int exit_status);
 void	process_input(char *input, t_env **env);
-void clean_cmds_tokens_input(t_cmd	*cmds, t_token	*tokens, char *input);
+void	clean_cmds_tokens_input(t_cmd	*cmds, t_token	*tokens, char *input);
 
 // parser_utils.c
 void	add_redir_to_cmd(t_cmd *cmd, t_redir *new_redir);
@@ -174,7 +173,9 @@ void	add_arg_to_cmd(t_cmd *cmd, char *arg);
 
 // parser.c
 void	handle_redirection_parser(t_token **tokens, t_cmd *cmd);
+void	free_cmd_contents(t_cmd *cmd);
 void	free_cmds(t_cmd *cmds);
+t_cmd	*process_token(t_token **tokens, t_cmd *current_cmd, t_cmd **cmds);
 t_cmd	*parse_tokens(t_token *tokens);
 
 // signals.c
@@ -198,23 +199,23 @@ void	ft_free_split(char **split);
 
 //--------------BUILTINS--------------
 //bi_cd_special_case.c
-int	handle_home_case(t_env **env, char **old_pwd);
-int	handle_dash_case(t_env **env, char **old_pwd);
-int	process_special_case(char *arg, t_env **env, char **old_pwd);
-int	handle_no_args(t_env **env, char **old_pwd);
+int		handle_home_case(t_env **env, char **old_pwd);
+int		handle_dash_case(t_env **env, char **old_pwd);
+int		process_special_case(char *arg, t_env **env, char **old_pwd);
+int		handle_no_args(t_env **env, char **old_pwd);
 
 //bi_cd.c
-int	handle_tilde_path(char **path, char *arg, t_env **env,
-	char *old_pwd);
-int	handle_regular_path(char **path, char *arg, char *old_pwd);
-int	process_path_argument(char **args, t_env **env, char **old_pwd);
-int	bi_cd(char **args, t_env **env);
+int		handle_tilde_path(char **path, char *arg, t_env **env,
+			char *old_pwd);
+int		handle_regular_path(char **path, char *arg, char *old_pwd);
+int		process_path_argument(char **args, t_env **env, char **old_pwd);
+int		bi_cd(char **args, t_env **env);
 
 //bi_cd_utils.c
 void	update_or_create_pwd(t_env **env, t_env *pwd_var, char *new_pwd);
 void	update_or_create_oldpwd(t_env **env, t_env *oldpwd_var,
-	char *old_pwd_copy);
-int	update_pwds(t_env **env, char *old_pwd);
+			char *old_pwd_copy);
+int		update_pwds(t_env **env, char *old_pwd);
 
 // bi_echo.c
 int		bi_echo(char *argv[]);
@@ -243,7 +244,6 @@ int		bi_pwd(char *argv[]);
 int		is_valid_identifier(char *name);
 int		remove_env_var(char *varname, t_env **env);
 int		bi_unset(char **args, t_env **env);
-
 
 ////--------------REDIRECTIONS----------------
 // input_output_append.c
