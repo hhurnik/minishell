@@ -191,7 +191,9 @@ int		ft_strcmp(const char *s1, const char *s2);
 
 // utils2.c
 char	*ft_strjoin3(const char *s1, const char *s2, const char *s3);
+char	*check_absolute_path(char *cmd);
 char	*get_exec_path(char *cmd, t_env *env);
+char	*search_in_path_dirs(char *cmd, char **dirs);
 void	ft_free_split(char **split);
 
 //--------------BUILTINS--------------
