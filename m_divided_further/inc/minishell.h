@@ -229,8 +229,8 @@ int		bi_exit(char *argv[], t_env *env);
 
 // bi_export.c
 size_t	env_len(t_env *env);
-size_t	env_key_len(t_env *env);
 void	print_env_export_format(t_env *env);
+int		parse_env_var(const char *var, char **key, char **value);
 int		set_env_var(const char *var, t_env **env);
 int		bi_export(char **args, t_env **env);
 
