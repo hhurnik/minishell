@@ -1,0 +1,68 @@
+valgrind command to run:
+valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./minishell 2> valgrind_errors.txt
+
+1. /bin/ls -- fixed, leaks only from readline/add_history - we should rl_clear_histry before exiting probably
+2. /bin/ls -l /tmp -- add_history leaks, same as above
+3. /bin/echo "Hello World" --fixed leaks, just add_history, i wont keep repeating anymore - to be fixed, no other leaks
+4. /bin/echo -n "No newline" -  OK
+5.    /bin/ls    (spaces around command)- OK
+6.  (just space) - OK
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+7. 	 (just tab)
+8. echo ""
+9. exit
+10. exit 42
+11. exit 300
+12. exit abc
+13. /bin/ls /nonexistent → echo $?
+14. [Test ctrl-C in empty prompt]
+15. [Test ctrl-\ in empty prompt]
+16. [Test ctrl-D in empty prompt]
+17. Type cat → ctrl-C → check buffer
+18. echo "hello   world"
+19. echo 'hello   $USER'
+20. echo "'$USER'"
+21. echo '"$USER"'
+22. echo $USER
+23. export TEST=123 → echo $TEST
+24. unset USER → echo $USER
+25. export PATH= → ls
+26. cd /tmp → pwd
+27. cd .. → pwd
+28. cd /nonexistent
+29. echo "test" > file1 → cat file1
+30. echo "append" >> file1
+31. cat < file1
+32. cat << EOF
+33. ls | grep "file"
+34. cat file1 | wc -l
+35. ls /nonexistent | grep "txt"
+36. echo *
+37. echo "hello""world"
+38. export A=1 B=2 → echo $A $B
+39. exit 999999 → echo $?
+40. /bin/ls / /nonexistent
+41. echo -e "\x41"
+42. cat | cat | ls
+43. echo "$USER$PATH"
+44. echo '$$'
+45. echo "$?" (after ctrl-C)
+46. cd . → pwd
+47. cd ~ → pwd
+48. echo "   "
+49. echo -n -n -n hello
+50. dsbksdgbksdghsd

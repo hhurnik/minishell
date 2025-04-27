@@ -7,8 +7,8 @@
 4. execution.c          OK
 5. executor_utils.c     OK
 6. executor.C           OK
-7. expander.c           NOT OKAY - expand_str - 65 lines
-8. lexer.C              NOT OKAY
+7. expander.c           OK
+8. lexer.C              OK
 9. main.c               OK
 10. main_utils.C        OK
 11. parser_utils.C      OK

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   bi_exit.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: hhurnik <hhurnik@student.42.fr>            +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/24 20:19:34 by hhurnik           #+#    #+#             */
-/*   Updated: 2025/04/27 18:22:58 by hhurnik          ###   ########.fr       */
+/*   Updated: 2025/04/28 00:57:59 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,6 +71,5 @@ int	bi_exit(char *argv[], t_env *env)
 	if (should_exit == 1) // Had too many arguments
 		return (1); // Don't exit shell, just return error
 	cleanup(env, NULL, NULL, NULL);
-	free_env(env); //dodane valgrind
 	exit(exit_code);
 }

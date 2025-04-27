@@ -1,17 +1,33 @@
 #include "inc/minishell.h"
 
-void	free_env(t_env *env)
-{
-	t_env	*tmp;
+// leakami, pred valgrindem
+// void	free_env(t_env *env)
+// {
+// 	t_env	*tmp;
 
-	while (env)
-	{
-		tmp = env;
-		env = env->next;
-		free(tmp->key);
-		free(tmp->value);
-		free(tmp);
-	}
+// 	while (env)
+// 	{
+// 		tmp = env;
+// 		env = env->next;
+// 		free(tmp->key);
+// 		free(tmp->value);
+// 		free(tmp);
+// 	}
+// }
+
+//po valgrindie
+void free_env(t_env *env)
+{
+    t_env *tmp;
+    
+    while (env)
+    {
+        tmp = env->next;  // Save next pointer before freeing
+        free(env->key);
+        free(env->value);
+        free(env);
+        env = tmp;
+    }
 }
 
 void	init_shell(char **envp, t_env **env)
