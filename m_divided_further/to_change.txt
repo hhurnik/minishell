@@ -13,7 +13,7 @@
 10. main_utils.C        OK
 11. parser_utils.C      OK
 12. parser_utils2.C     OK
-13. parser.C            NOT OKAY
+13. parser.C            OK (po usunieciu komentarzy)
 14. pipes.C             OK
 15. signals.C           OK
 16. utils.C             OK
