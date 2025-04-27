@@ -1,0 +1,636 @@
+#include "../inc/minishell.h"
+
+int	handle_tilde_path(char **path, char *arg, t_env **env, char *old_pwd)
+{
+	char	*home;
+
+	home = get_env_value("HOME", *env);
+	if (!home)
+	{
+		ft_putstr_fd("minishell: cd: HOME not set\n", STDERR_FILENO);
+		free(old_pwd);
+		return (ERROR);
+	}
+	*path = ft_strjoin(home, &arg[1]);
+	if (!*path)
+	{
+		free(old_pwd);
+		return (ERROR);
+	}
+	return (CONTINUE);
+}
+
+int	handle_regular_path(char **path, char *arg, char *old_pwd)
+{
+	*path = ft_strdup(arg);
+	if (!*path)
+	{
+		free(old_pwd);
+		return (ERROR);
+	}
+	return (CONTINUE);
+}
+
+int	process_path_argument(char **args, t_env **env, char **old_pwd)
+{
+	char	*path;
+	int		result;
+
+	if (args[1][0] == '~' && args[1][1] == '/')
+		result = handle_tilde_path(&path, args[1], env, *old_pwd);
+	else
+		result = handle_regular_path(&path, args[1], *old_pwd);
+	if (result != CONTINUE)
+		return (result);
+	if (chdir(path) == -1)
+	{
+		perror("minishell: cd");
+		free(path);
+		free(*old_pwd);
+		return (ERROR);
+	}
+	free(path);
+	return (update_pwds(env, *old_pwd));
+}
+
+int	bi_cd(char **args, t_env **env)
+{
+	char	*old_pwd;
+	int		special_case_result;
+
+	old_pwd = getcwd(NULL, 0);
+	if (!old_pwd)
+	{
+		if (get_env_value("PWD", *env))
+			old_pwd = ft_strdup(get_env_value("PWD", *env));
+		else
+			old_pwd = ft_strdup("");
+	}
+	if (!args[1])
+		return (handle_no_args(env, &old_pwd));
+	special_case_result = process_special_case(args[1], env, &old_pwd);
+	if (special_case_result != CONTINUE)
+		return (special_case_result);
+	return (process_path_argument(args, env, &old_pwd));
+}
+#include "../inc/minishell.h"
+
+int	handle_home_case(t_env **env, char **old_pwd)
+{
+	char	*home;
+	char	*pwd_value;
+
+	home = get_env_value("HOME", *env);
+	if (!home)
+	{
+		ft_putstr_fd("minishell: cd: HOME not set\n", STDERR_FILENO);
+		return (ERROR);
+	}
+	// Make a copy of the string instead of storing the direct pointer
+	pwd_value = get_env_value("PWD", *env);
+	if (pwd_value)
+		*old_pwd = ft_strdup(pwd_value);
+	else
+		*old_pwd = getcwd(NULL, 0);
+	if (chdir(home) == -1)
+	{
+		perror("minishell: cd");
+		free(*old_pwd);
+		return (ERROR);
+	}
+	return (SUCCESS);
+}
+
+int	handle_dash_case(t_env **env, char **old_pwd)
+{
+	char	*pwd_value;
+	char	*oldpwd;
+
+	oldpwd = get_env_value("OLDPWD", *env);
+	if (!oldpwd)
+	{
+		ft_putstr_fd("minishell: cd: OLDPWD not set\n", STDERR_FILENO);
+		return (ERROR);
+	}
+	// Make a copy of the string
+	pwd_value = get_env_value("PWD", *env);
+	if (pwd_value)
+		*old_pwd = ft_strdup(pwd_value);
+	else
+		*old_pwd = getcwd(NULL, 0);
+	if (chdir(oldpwd) == -1)
+	{
+		perror("minishell: cd");
+		free(*old_pwd);
+		return (ERROR);
+	}
+	ft_putendl_fd(oldpwd, STDOUT_FILENO);
+	return (SUCCESS);
+}
+
+int	process_special_case(char *arg, t_env **env, char **old_pwd)
+{
+	if (!arg[0] || (arg[0] == '~' && (ft_isspace(arg[1]) || arg[1] == '\0')))
+		return (handle_home_case(env, old_pwd));
+	if (arg[0] == '-')
+		return (handle_dash_case(env, old_pwd));
+	return (CONTINUE);
+}
+
+int	handle_no_args(t_env **env, char **old_pwd)
+{
+	if (handle_home_case(env, old_pwd) == SUCCESS)
+		return (update_pwds(env, *old_pwd));
+	return (ERROR);
+}
+#include "../inc/minishell.h"
+
+void	update_or_create_pwd(t_env **env, t_env *pwd_var, char *new_pwd)
+{
+	if (pwd_var)
+	{
+		free(pwd_var->value);
+		pwd_var->value = new_pwd;
+	}
+	else
+	{
+		env_add_back(env, env_new("PWD", new_pwd));
+		free(new_pwd);
+	}
+}
+
+void	update_or_create_oldpwd(t_env **env, t_env *oldpwd_var,
+		char *old_pwd_copy)
+{
+	if (oldpwd_var)
+	{
+		free(oldpwd_var->value);
+		if (old_pwd_copy)
+			oldpwd_var->value = old_pwd_copy;
+		else
+			oldpwd_var->value = ft_strdup("");
+	}
+	else if (old_pwd_copy)
+	{
+		env_add_back(env, env_new("OLDPWD", old_pwd_copy));
+		free(old_pwd_copy);
+	}
+}
+
+int	update_pwds(t_env **env, char *old_pwd)
+{
+	t_env	*pwd_var;
+	t_env	*oldpwd_var;
+	char	*new_pwd;
+	char	*old_pwd_copy;
+
+	old_pwd_copy = NULL;
+	// Make a copy of old_pwd for OLDPWD
+	if (old_pwd)
+		old_pwd_copy = ft_strdup(old_pwd);
+	pwd_var = get_env("PWD", *env);
+	oldpwd_var = get_env("OLDPWD", *env);
+	new_pwd = getcwd(NULL, 0);
+	if (!new_pwd)
+	{
+		perror("minishell: cd");
+		free(old_pwd);
+		free(old_pwd_copy);
+		return (ERROR);
+	}
+	update_or_create_pwd(env, pwd_var, new_pwd);
+	update_or_create_oldpwd(env, oldpwd_var, old_pwd_copy);
+	// Always free the original old_pwd
+	free(old_pwd);
+	return (SUCCESS);
+}
+#include "../inc/minishell.h"
+
+int	bi_echo(char *argv[])
+{
+	int	i;
+	int	newline;
+	int	first_arg;
+
+	// Parse options and get starting index
+	i = handle_n_option(argv, &newline);
+	// Print arguments
+	first_arg = 1;
+	while (argv[i])
+	{
+		if (!first_arg)
+			ft_putchar_fd(' ', STDOUT_FILENO);
+		ft_putstr_fd(argv[i], STDOUT_FILENO);
+		first_arg = 0;
+		i++;
+	}
+	// Print newline if needed
+	if (newline)
+		ft_putchar_fd('\n', STDOUT_FILENO);
+	return (0);
+}
+
+int	handle_n_option(char *argv[], int *newline_flag)
+{
+	int	i;
+	int	j;
+
+	i = 1;
+	*newline_flag = 1; // Default to printing newline
+	// Handle -n option(s)
+	while (argv[i] && ft_strncmp(argv[i], "-n", 2) == 0)
+	{
+		// Check if it's only "-n" or "-nnn..." without other characters
+		j = 2;
+		while (argv[i][j] && argv[i][j] == 'n')
+			j++;
+		if (argv[i][j] == '\0') // Valid -n option
+		{
+			*newline_flag = 0;
+			i++;
+		}
+		else
+			break ;
+	}
+	return (i); // Return the index where arguments start
+}
+#include "../inc/minishell.h"
+
+/**
+ * env builtin command - wypisuje all env variables
+ * Format: NAME=VALUE (one per line)
+ */
+int	bi_env(char **args, t_env **env)
+{
+	t_env	*current;
+
+	// Check for unsupported options/arguments
+	if (args[1])
+	{
+		ft_putstr_fd("env: too many arguments\n", STDERR_FILENO);
+		return (ERROR);
+	}
+	// Print all env variables
+	current = *env;
+	while (current)
+	{
+		// wypis tylko variables with values (standard env behavior)
+		if (current->value && current->value[0] != '\0')
+		{
+			ft_putstr_fd(current->key, STDOUT_FILENO);
+			ft_putstr_fd("=", STDOUT_FILENO);
+			ft_putstr_fd(current->value, STDOUT_FILENO);
+			ft_putstr_fd("\n", STDOUT_FILENO);
+		}
+		current = current->next;
+	}
+	return (SUCCESS);
+}
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   bi_exit.c                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: hhurnik <hhurnik@student.42.fr>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/03/24 20:19:34 by hhurnik           #+#    #+#             */
+/*   Updated: 2025/04/24 20:18:37 by hhurnik          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "../inc/minishell.h"
+
+void	write_stderr(char *str)
+{
+	write(2, str, ft_strlen(str));
+}
+
+int	is_integer(char *str)
+{
+	int	i;
+
+	i = 0;
+	if (str[i] == '-' || str[i] == '+')
+		i++;
+	while (str[i])
+	{
+		if (str[i] < '0' || str[i] > '9')
+			return (0);
+		i++;
+	}
+	return (1);
+}
+
+int	parse_exit_args(char *argv[], int *exit_code)
+{
+	if (argv[1] && argv[2])
+	{
+		write_stderr("exit: too many arguments\n");
+		*exit_code = 1;
+		return (1); // Indicate error (don't exit)
+	}
+	if (argv[1])
+	{
+		if (is_integer(argv[1]))
+		{
+			*exit_code = ft_atoi(argv[1]);
+			// bash calculates exit code modulo 256
+			*exit_code %= 256;
+			if (*exit_code < 0) // Ensure positive result
+				*exit_code += 256;
+		}
+		else
+		{
+			write_stderr("exit: numeric argument required\n");
+			*exit_code = 2;
+		}
+	}
+	return (0); // Indicate success (should exit)
+}
+
+int	bi_exit(char *argv[], t_env *env)
+{
+	int	exit_code;
+	int	should_exit;
+
+	exit_code = g_exit_status;
+	ft_putstr_fd("exit\n", STDOUT_FILENO); // Keep this - it's bash behavior
+	should_exit = parse_exit_args(argv, &exit_code);
+	if (should_exit == 1) // Had too many arguments
+		return (1); // Don't exit shell, just return error
+	cleanup(env, NULL, NULL, NULL);
+	exit(exit_code);
+}
+// without arguments it lists all environment variables that are marked
+// why use export? because by default, shell variables are local to the shell,
+// when you export them, you make them part of the environment,
+//	which is passed to child processes like ls, vim, gcc
+
+#include "../inc/minishell.h"
+
+// calculate the length of an environment variable's value
+size_t	env_len(t_env *env)
+{
+	if (!env || !env->value)
+		return (0);
+	return (ft_strlen(env->value));
+}
+
+// print all environment variables in export format
+// format: declare -x KEY="VALUE"
+void	print_env_export_format(t_env *env)
+{
+	while (env)
+	{
+		ft_putstr_fd("declare -x ", STDOUT_FILENO);
+		ft_putstr_fd(env->key, STDOUT_FILENO);
+		ft_putstr_fd("=\"", STDOUT_FILENO);
+		ft_putstr_fd(env->value, STDOUT_FILENO);
+		ft_putstr_fd("\"\n", STDOUT_FILENO);
+		env = env->next;
+	}
+}
+
+// Add or update an environment variable
+int	set_env_var(const char *var, t_env **env)
+{
+	char	*key;
+	char	*value;
+	char	*equals;
+	t_env	*existing;
+
+	// Find "=" to separate key and value
+	equals = ft_strchr(var, '=');
+	if (!equals)
+	{
+		// nooo equals sign, just mark for export (already in env)
+		key = ft_strdup(var);
+		value = ft_strdup("");
+	}
+	else
+	{
+		// extract key and value
+		key = ft_substr(var, 0, equals - var);
+		value = ft_strdup(equals + 1);
+	}
+	if (!key || !value)
+	{
+		free(key);
+		free(value);
+		return (ERROR);
+	}
+	// check if variable already exists
+	existing = get_env(key, *env);
+	if (existing)
+	{
+		// update existing variable
+		if (equals) // only update value if '=' was given
+		{
+			free(existing->value);
+			existing->value = value;
+		}
+		free(key);
+	}
+	else
+	{
+		// Add new variable
+		env_add_back(env, env_new(key, value));
+		free(key);
+		free(value);
+	}
+	return (SUCCESS);
+}
+
+// export with no options
+// If no arguments, print all env variables in export format
+// otherwise, set or update variables in the environment
+int	bi_export(char **args, t_env **env)
+{
+	int	i;
+	int	status;
+
+	if (!env)
+		return (ERROR);
+	// no arguments - print all variables in export format
+	if (!args[1])
+	{
+		print_env_export_format(*env);
+		return (SUCCESS);
+	}
+	// with arguments - add or update variables
+	status = SUCCESS;
+	i = 1;
+	while (args[i])
+	{
+		if (!is_valid_identifier(args[i]))
+		{
+			ft_putstr_fd("minishell: export: `", STDERR_FILENO);
+			ft_putstr_fd(args[i], STDERR_FILENO);
+			ft_putstr_fd("': not a valid identifier\n", STDERR_FILENO);
+			status = ERROR;
+		}
+		else
+		{
+			if (set_env_var(args[i], env) != SUCCESS)
+				status = ERROR;
+		}
+		i++;
+	}
+	return (status);
+}
+#include "../inc/minishell.h"
+// char cwd[PATH_MAX]; // buffer to store the current directory path
+int	bi_pwd(char *argv[])
+{
+	char	cwd[PATH_MAX];
+
+	// check if there are any arguments other than the command
+	if (argv[1])
+	{
+		ft_putstr_fd("pwd: too many arguments\n", STDERR_FILENO);
+		return (1);
+	}
+	// get the current working directory
+	if (getcwd(cwd, sizeof(cwd)) != NULL)
+	{
+		ft_putstr_fd(cwd, STDOUT_FILENO); // print the current directory
+		ft_putstr_fd("\n", STDOUT_FILENO); // print newline
+		return (0); // successs
+	}
+	// if getcwd fails, print the error
+	perror("minishell: pwd");
+	return (1);
+}
+#include "../inc/minishell.h"
+
+// check if a variable name is valid for unset
+// valid names: start with letter or underscore, then letters,
+//	numbers or underscores
+//it checks all, key and also a value after "=", 
+//wiec ponizej napisalam nowy
+// int	is_valid_identifier(char *name)
+// {
+// 	int	i;
+
+// 	if (!name || !*name)
+// 		return (0);
+// 	// First character must be letter or underscore
+// 	if (!ft_isalpha(name[0]) && name[0] != '_')
+// 		return (0);
+// 	// Remaining characters must be letters, digits or underscores
+// 	i = 1;
+// 	while (name[i])
+// 	{
+// 		if (!ft_isalnum(name[i]) && name[i] != '_')
+// 			return (0);
+// 		i++;
+// 	}
+// 	return (1);
+// }
+
+int	is_valid_identifier(char *name)
+{
+	int	i;
+	char *equals_pos;
+
+	if (!name || !*name)
+		return (0);
+
+	equals_pos = ft_strchr(name, '=');
+	//utnij jesli =
+	if (equals_pos)
+		*equals_pos = '\0';
+
+	// 1st character must be a letter or underscore
+	if (!ft_isalpha(name[0]) && name[0] != '_')
+	{
+		if (equals_pos)
+			*equals_pos = '='; // Restore '=' if we modified it
+		return (0);
+	}
+
+	// Check remaining characters (only up to '=' if it exists)
+	i = 1;
+	while (name[i] && name[i] != '=')
+	{
+		if (!ft_isalnum(name[i]) && name[i] != '_')
+		{
+			if (equals_pos)
+				*equals_pos = '='; // Restore '=' if modified
+			return (0);
+		}
+		i++;
+	}
+
+	// Restore '=' if we modified it (for further processing)
+	if (equals_pos)
+		*equals_pos = '=';
+
+	return (1);
+}
+
+/**
+ * Remove an environment variable from the linked list
+ */
+//fukcja 25 linijek bez komentarzy OK
+int	remove_env_var(char *varname, t_env **env)
+{
+	t_env	*current;
+	t_env	*previous;
+
+	if (!env || !*env || !varname)
+		return (ERROR);
+	current = *env;
+	previous = NULL;
+	// Find the variable in the linked list
+	while (current)
+	{
+		// Compare variable names exactly (not just a prefix)
+		if (ft_strcmp(current->key, varname) == 0)
+		{
+			// Remove from beginning of list
+			if (previous == NULL)
+				*env = current->next;
+			// Remove from middle/end of list
+			else
+				previous->next = current->next;
+			// Free node memory
+			free(current->key);
+			free(current->value);
+			free(current);
+			return (SUCCESS);
+		}
+		previous = current;
+		current = current->next;
+	}
+	return (SUCCESS); // Variable not found, not an error
+}
+
+/**
+ * Unset environment variables (no options supported)
+ */
+int	bi_unset(char **args, t_env **env)
+{
+	int	i;
+	int	status;
+
+	status = SUCCESS;
+	// No arguments is not an error
+	if (!args[1])
+		return (SUCCESS);
+	i = 1;
+	while (args[i])
+	{
+		if (!is_valid_identifier(args[i]))
+		{
+			ft_putstr_fd("minishell: unset: `", STDERR_FILENO);
+			ft_putstr_fd(args[i], STDERR_FILENO);
+			ft_putstr_fd("': not a valid identifier\n", STDERR_FILENO);
+			status = ERROR;
+		}
+		else
+			remove_env_var(args[i], env);
+		i++;
+	}
+	return (status);
+}
