@@ -17,7 +17,7 @@
 14. pipes.C             OK
 15. signals.C           OK
 16. utils.C             OK
-17. utils2.C            NOT OKAY - get_exec_path function 42 lines
+17. utils2.C            OK
 
 
 BUILTINS:
