@@ -1,21 +1,20 @@
 #include "inc/minishell.h"
 
-void	cleanup(t_env *env, t_token *tokens, t_cmd *cmds, char *input)
+void cleanup(t_resources *res)
 {
-	// Free readline specific things (might help with *some* readline leaks)
-	rl_clear_history(); // Clear history list maintained by readline
-	// Consider rl_deprep_terminal() if necessary, but often not needed.
-	// Free your data structures
-	if (input)
-		free(input);
-	if (tokens)
-		free_tokens(tokens);
-	if (cmds)
-		free_cmds(cmds);
-	if (env)
-		free_env(env);
+    if (res->input)
+        free(res->input);
+    if (res->tokens)
+        free_tokens(res->tokens);
+    if (res->cmds)
+        free_cmds(res->cmds);
+    if (res->env)
+        free_env(res->env);
+    
+    // Clear readline history
+    rl_clear_history();
 }
-
+//2 leaki
 void	process_command(t_cmd *cmd, t_env **env, int prev_pipe_read,
 		int *pipe_fd)
 {
@@ -25,6 +24,7 @@ void	process_command(t_cmd *cmd, t_env **env, int prev_pipe_read,
 	if (pid == 0)
 		handle_child_process(cmd, env, prev_pipe_read, pipe_fd);
 }
+
 
 int	init_execution(t_cmd *cmds, int *stdin_copy, int *stdout_copy)
 {

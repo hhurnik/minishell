@@ -6,7 +6,7 @@
 /*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/24 20:19:34 by hhurnik           #+#    #+#             */
-/*   Updated: 2025/04/28 00:57:59 by marvin           ###   ########.fr       */
+/*   Updated: 2025/04/28 19:07:24 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,16 +60,20 @@ int	parse_exit_args(char *argv[], int *exit_code)
 	return (0); // Indicate success (should exit)
 }
 
-int	bi_exit(char *argv[], t_env *env)
+/// the last, 2 leaki
+int bi_exit(char *argv[], t_resources *res)
 {
-	int	exit_code;
-	int	should_exit;
+    int exit_code;
+    int should_exit;
 
-	exit_code = g_exit_status;
-	ft_putstr_fd("exit\n", STDOUT_FILENO); // Keep this - it's bash behavior
-	should_exit = parse_exit_args(argv, &exit_code);
-	if (should_exit == 1) // Had too many arguments
-		return (1); // Don't exit shell, just return error
-	cleanup(env, NULL, NULL, NULL);
-	exit(exit_code);
+    exit_code = g_exit_status;
+    ft_putstr_fd("exit\n", STDOUT_FILENO);
+    should_exit = parse_exit_args(argv, &exit_code);
+    if (should_exit == 1)
+		return (1);
+      
+    // Clean up all resources
+    cleanup(res); // This handles res->input, tokens, cmds, env
+	rl_clear_history(); // Clear readline history
+    exit(exit_code);
 }

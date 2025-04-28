@@ -1,22 +1,53 @@
 #include "inc/minishell.h"
 
-void	execute(t_cmd *cmds, t_env **env)
-{
-	int	stdin_copy;
-	int	stdout_copy;
-	int	prev_pipe_read;
+// //2 leaki
+// void execute(t_cmd *cmds, t_env **env)
+// {
+//     int stdin_copy;
+//     int stdout_copy;
+//     int prev_pipe_read;
 
-	if (!init_execution(cmds, &stdin_copy, &stdout_copy))
-	{
-		free_cmds(cmds); //dodane valgrind
-		free_env(*env); //dodane valgrind
-		return ;
-	}
-	if (handle_single_builtin(cmds, env, stdin_copy, stdout_copy))
-		return ;
-	prepare_pipeline_execution(cmds, &prev_pipe_read);
-	execute_pipeline(cmds, env, &prev_pipe_read);
-	cleanup_execution(stdin_copy, stdout_copy);
+//     if (!init_execution(cmds, &stdin_copy, &stdout_copy))
+//     {
+//         free_cmds(cmds);
+//         free_env(*env);
+//         return;
+//     }
+//     if (handle_single_builtin(cmds, env, stdin_copy, stdout_copy))
+//         return;
+//     prepare_pipeline_execution(cmds, &prev_pipe_read);
+//     execute_pipeline(cmds, env, &prev_pipe_read);
+//     cleanup_execution(stdin_copy, stdout_copy);
+// }
+void execute(t_cmd *cmds, t_env **env)
+{
+    int stdin_copy;
+    int stdout_copy;
+    int prev_pipe_read;
+    t_resources res = {0}; // Initialize resources structure
+    
+    // Populate resources for proper cleanup in case of exit
+    res.env = *env;
+    res.cmds = cmds;
+    // Note: tokens and input would need to be provided from the caller
+    // For now, set them to NULL
+    res.tokens = NULL;
+    res.input = NULL;
+
+    if (!init_execution(cmds, &stdin_copy, &stdout_copy))
+    {
+        free_cmds(cmds);
+        free_env(*env);
+        return;
+    }
+    
+    // Pass the resources struct to handle_single_builtin
+    if (handle_single_builtin(cmds, &res))
+        return;
+        
+    prepare_pipeline_execution(cmds, &prev_pipe_read);
+    execute_pipeline(cmds, env, &prev_pipe_read);
+    cleanup_execution(stdin_copy, stdout_copy);
 }
 
 int	setup_pipe_and_fork(t_cmd *cmd, int *pipe_fd)
@@ -41,45 +72,70 @@ int	setup_pipe_and_fork(t_cmd *cmd, int *pipe_fd)
 	return (pid);
 }
 
-void	handle_child_process(t_cmd *cmd, t_env **env, int prev_pipe_read,
-	int *pipe_fd)
+//2 leaki, ok
+void handle_child_process(t_cmd *cmd, t_env **env, int prev_pipe_read, int *pipe_fd)
 {
-	signal(SIGINT, SIG_DFL);
-	signal(SIGQUIT, SIG_DFL);
-	if (prev_pipe_read != -1)
-	{
-		dup2(prev_pipe_read, STDIN_FILENO);
-		close(prev_pipe_read);
-	}
-	if (cmd->next)
-		dup2(pipe_fd[1], STDOUT_FILENO);
-	if (pipe_fd[0] != -1)
-		close(pipe_fd[0]);
-	if (pipe_fd[1] != -1)
-		close(pipe_fd[1]);
-	if (setup_redirections(cmd->redirections) < 0)
-	{
-		free_cmds(cmd); //dodane valgrind
-		free_env(*env); //dodane valgrind
-		exit(1);
-	}
-	if (is_builtin(cmd->args[0]))
-		exit(run_builtin(cmd, env));
-	else
-		execute_external(cmd, *env);
+    t_resources res;
+
+    res.env = *env;
+    res.cmds = cmd;
+    res.tokens = NULL; // Tokens are not used here
+    res.input = NULL;  // Input is not used here
+
+    signal(SIGINT, SIG_DFL);
+    signal(SIGQUIT, SIG_DFL);
+    if (prev_pipe_read != -1)
+    {
+        dup2(prev_pipe_read, STDIN_FILENO);
+        close(prev_pipe_read);
+    }
+    if (cmd->next)
+        dup2(pipe_fd[1], STDOUT_FILENO);
+    if (pipe_fd[0] != -1)
+        close(pipe_fd[0]);
+    if (pipe_fd[1] != -1)
+        close(pipe_fd[1]);
+    if (setup_redirections(cmd->redirections) < 0)
+    {
+        free_cmds(cmd);
+        free_env(*env);
+        exit(1);
+    }
+    if (is_builtin(cmd->args[0]))
+        exit(run_builtin(cmd, &res)); // Pass res instead of env
+    else
+        execute_external(cmd, *env);
 }
 
-void	execute_external(t_cmd *cmd, t_env *env)
+void execute_external(t_cmd *cmd, t_env *env)
 {
-	char	*path;
-	char	**env_arr;
+    char *path = NULL;
+    char **env_arr = NULL;
 
-	path = get_exec_path(cmd->args[0], env);
-	env_arr = env_to_arr(env);
-	if (path)
-		execve(path, cmd->args, env_arr);
-	else
-		execvp(cmd->args[0], cmd->args);
-	perror("minishell");
-	exit(127);
+    path = get_exec_path(cmd->args[0], env);
+    env_arr = env_to_arr(env);
+
+    if (path)
+    {
+        execve(path, cmd->args, env_arr);
+        // If execve fails, we'll continue to the error handling
+        free(path);
+    }
+
+    // If we reach here, exec failed (either path wasn't found or execve failed)
+    ft_free_split(env_arr);
+    if (path == NULL)
+    {
+        // Command not found in any PATH directory
+        ft_putstr_fd("minishell: ", STDERR_FILENO);
+        ft_putstr_fd(cmd->args[0], STDERR_FILENO);
+        ft_putstr_fd(": command not found\n", STDERR_FILENO);
+        exit(127);
+    }
+    else
+    {
+        // execve failed for some other reason
+        perror("minishell");
+        exit(126); // Typically 126 is used for "found but not executable"
+    }
 }

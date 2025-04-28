@@ -88,6 +88,21 @@ typedef struct s_parse_state
 	t_token *tokens;
 }	t_parse_state;
 
+//dla handle_parend ... dodaje poniej
+typedef struct s_resources
+{
+    t_env   *env;
+    t_token *tokens;
+    t_cmd   *cmds;
+    char    *input;
+}	t_resources;
+
+typedef struct s_fds
+{
+    int stdin;
+    int stdout;
+}	t_fds;
+
 // ------------------------------------------
 // Prototypy funkcji
 // ------------------------------------------
@@ -102,11 +117,15 @@ void	restore_std_fds(int stdin_copy, int stdout_copy);
 int		setup_pipe_and_fork(t_cmd *cmd, int *pipe_fd);
 void	handle_child_process(t_cmd *cmd, t_env **env, int prev_pipe_read,
 			int *pipe_fd);
+
 void	execute_external(t_cmd *cmd, t_env *env);
-void	execute(t_cmd *cmds, t_env **env);
+//void	execute(t_cmd *cmds, t_env **env);
+void execute(t_cmd *cmds, t_env **env);
+
 
 // executor.c
-void	cleanup(t_env *env, t_token *tokens, t_cmd *cmds, char *input);
+//void	cleanup(t_env *env, t_token *tokens, t_cmd *cmds, char *input);
+void cleanup(t_resources *res);
 void	process_command(t_cmd *cmd, t_env **env, int prev_pipe_read,
 			int *pipe_fd);
 int		init_execution(t_cmd *cmds, int *stdin_copy, int *stdout_copy);
@@ -117,6 +136,7 @@ void	wait_for_children(void);
 void	cleanup_pipes(int *pipe_fd, int *prev_pipe_read);
 void	prepare_pipeline_execution(t_cmd *cmds, int *prev_pipe_read);
 void	execute_pipeline(t_cmd *cmds, t_env **env, int *prev_pipe_read);
+// void execute_pipeline(t_cmd *cmds, t_resources *res, int *prev_pipe_read);
 void	update_pipe_status(t_cmd *cmd, int *prev_pipe_read, int *pipe_fd);
 
 // i builtinhandler
@@ -125,11 +145,16 @@ void	update_pipe_status(t_cmd *cmd, int *prev_pipe_read, int *pipe_fd);
 
 // builtin_handler.c
 int		is_builtin(char *cmd);
-int		run_builtin(t_cmd *cmd, t_env **env);
-int		handle_parent_builtin(t_cmd *cmd, t_env **env, int stdin_copy,
-			int stdout_copy);
-int		handle_single_builtin(t_cmd *cmds, t_env **env, int stdin_copy,
-			int stdout_copy);
+//int		run_builtin(t_cmd *cmd, t_env **env);
+int run_builtin(t_cmd *cmd, t_resources *res);
+// int		handle_parent_builtin(t_cmd *cmd, t_env **env, int stdin_copy,
+// 			int stdout_copy);
+int handle_parent_builtin(t_cmd *cmd, t_fds fds, t_resources *res);
+
+// int		handle_single_builtin(t_cmd *cmds, t_env **env, int stdin_copy,
+// 			int stdout_copy);
+int handle_single_builtin(t_cmd *cmds, t_resources *res);
+
 
 // env_utils.c
 t_env	*get_env(const char *key, t_env *env);
@@ -207,8 +232,10 @@ void	handle_redirection(char *input, int *i, t_token **tokens);
 //main_utils.c
 void	free_env(t_env *env);
 void	init_shell(char **envp, t_env **env);
-void	handle_eof(t_env *env, int exit_status);
-void	process_input(char *input, t_env **env);
+//void	handle_eof(t_env *env, int exit_status);
+void handle_eof(int exit_status);
+//void	process_input(char *input, t_env **env);
+void process_input(char *input, t_env **env);
 void	clean_cmds_tokens_input(t_cmd	*cmds, t_token	*tokens, char *input);
 
 // parser_utils.c
@@ -278,8 +305,8 @@ int		bi_env(char **args, t_env **env);
 void	write_stderr(char *str);
 int		is_integer(char *str);
 int		parse_exit_args(char *argv[], int *exit_code);
-int		bi_exit(char *argv[], t_env *env);
-
+//int		bi_exit(char *argv[], t_env *env);
+int bi_exit(char *argv[], t_resources *res);
 // bi_export.c
 size_t	env_len(t_env *env);
 void	print_env_export_format(t_env *env);

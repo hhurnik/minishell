@@ -6,7 +6,7 @@ void	prepare_pipeline_execution(t_cmd *cmds, int *prev_pipe_read)
 	setup_signals_for_command();
 	(void)cmds;
 }
-
+//2 leaki
 void	execute_pipeline(t_cmd *cmds, t_env **env, int *prev_pipe_read)
 {
 	int		pipe_fd[2];

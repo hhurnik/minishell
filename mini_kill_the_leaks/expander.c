@@ -17,93 +17,25 @@ char	*extract_var_name(char *str)
 	return (ft_substr(str, 0, len));
 }
 
-void	expand_variables(t_token *tokens, t_env *env)
+void expand_variables(t_token *tokens, t_env *env)
 {
-	char	*expanded;
+    char *expanded;
 
-	while (tokens)
-	{
-		if (tokens->type == T_DOUBLE_QUOTED || tokens->type == T_WORD)
-		{
-			// Rozwijaj zmienne tylko w podwójnych cudzysłowach i zwykłych słowach
-			expanded = expand_str(tokens->value, env);
-			free(tokens->value);
-			tokens->value = expanded;
-		}
-		// Dla T_SINGLE_QUOTED nie wykonuj ekspansji!
-		tokens = tokens->next;
-	}
+    while (tokens)
+    {
+        if (tokens->type == T_DOUBLE_QUOTED || tokens->type == T_WORD)
+        {
+            expanded = expand_str(tokens->value, env);
+            if (expanded)
+            {
+                free(tokens->value); // Free the old value
+                tokens->value = expanded;
+            }
+        }
+        tokens = tokens->next;
+    }
 }
 
-// char	*expand_str(char *str, t_env *env)
-// {
-// 	char    *result;
-// 	int     i;
-
-//     result = ft_strdup("");
-//     i = 0;
-
-// 	while (str[i])
-// 	{
-// 		if (str[i] == '$' && str[i + 1] == '?') // Handle special case for $?
-// 		{
-// 			result = ft_strjoin_free(result, ft_itoa(g_exit_status));
-// 			i += 2;
-// 		}
-// 		else if (str[i] == '$' && str[i + 1] == '{') // Handle ${VAR} format
-// 		{
-// 			i += 2; // Skip ${ characters
-// 			int start = i;
-
-// 			// Find the closing brace
-// 			while (str[i] && str[i] != '}')
-// 				i++;
-
-// 			if (str[i] == '}')
-// 			{
-// 				char *var_name = ft_substr(str, start, i - start);
-// 				char *var_value = get_env_value(var_name, env);
-
-// 				if (var_value)
-// 					result = ft_strjoin_free(result, var_value);
-// 				else
-// 					result = ft_strjoin_free(result, "");
-
-// 				free(var_name);
-// 				i++; // Skip closing brace
-// 			}
-// 		}
-// 		else if (str[i] == '$') // Handle standard $VAR format
-// 		{
-// 			char *var_name = extract_var_name(str + i + 1);
-// 			if (var_name[0] == '\0') // If no valid variable name,
-// treat as literal $
-// 			{
-// 				result = ft_strjoin_free(result, "$");
-// 				i++; // Skip the '$'
-// 			}
-// 			else
-// 			{
-// 				char *var_value = get_env_value(var_name, env);
-
-// 				if (var_value)
-// 					result = ft_strjoin_free(result, var_value);
-// 				else
-// 					result = ft_strjoin_free(result, "");
-
-// 				i += ft_strlen(var_name) + 1;
-// 			}
-// 			free(var_name);
-// 		}
-// 		else // Handle regular characters
-// 		{
-// 			char c[2] = {str[i], '\0'};
-// 			result = ft_strjoin_free(result, c);
-// 			i++;
-// 		}
-// 	}
-// 	return (result);
-// }
 
 int	handle_braced_var(char **result, char *str, int i, t_env *env)
 {
@@ -143,26 +75,63 @@ int	handle_standard_var(char **result, char *str, int i, t_env *env)
 	return (i);
 }
 
-char	*expand_str(char *str, t_env *env)
-{
-	char	*result;
-	int		i;
 
-	result = ft_strdup("");
-	i = 0;
-	while (str[i])
-	{
-		if (is_special_var(str, i))
-			i = handle_special_var(&result, i);
-		else if (is_braced_var(str, i))
-			i = handle_braced_var(&result, str, i, env);
-		else if (is_standard_var(str, i))
-			i = handle_standard_var(&result, str, i, env);
-		else
-		{
-			append_char(&result, str[i]);
-			i++;
-		}
-	}
-	return (result);
+//2 leaki
+// char *expand_str(char *str, t_env *env)
+// {
+//     char *result;
+//     int i;
+
+//     result = ft_strdup("");
+//     if (!result)
+//         return (NULL);
+//     i = 0;
+//     while (str[i])
+//     {
+//         if (is_special_var(str, i))
+//             i = handle_special_var(&result, i);
+//         else if (is_braced_var(str, i))
+//             i = handle_braced_var(&result, str, i, env);
+//         else if (is_standard_var(str, i))
+//             i = handle_standard_var(&result, str, i, env);
+//         else
+//         {
+//             result = ft_strjoin_char(result, str[i]);
+//             if (!result)
+//                 return (NULL);
+//             i++;
+//         }
+//     }
+//     return (result);
+// }
+char *expand_str(char *str, t_env *env)
+{
+    char *result;
+    int i;
+
+    result = ft_strdup("");
+    if (!result)
+        return (NULL); //bylo samo return null
+    i = 0;
+    while (str[i])
+    {
+        if (is_special_var(str, i))
+            i = handle_special_var(&result, i);
+        else if (is_braced_var(str, i))
+            i = handle_braced_var(&result, str, i, env);
+        else if (is_standard_var(str, i))
+            i = handle_standard_var(&result, str, i, env);
+        else
+        {
+            char *old_result = result;
+            result = ft_strjoin_char(old_result, str[i]);
+            if (!result)
+            {
+                free(old_result);
+                return (NULL);
+            }
+            i++;
+        }
+    }
+    return (result);
 }

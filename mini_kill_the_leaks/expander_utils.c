@@ -15,13 +15,21 @@ int	is_standard_var(char *str, int i)
 	return (str[i] == '$');
 }
 
-void	append_char(char **result, char c)
+void append_char(char **result, char c)
 {
-	char	tmp[2];
+    char tmp[2];
+    char *new_result;
 
-	tmp[0] = c;
-	tmp[1] = '\0';
-	*result = ft_strjoin_free(*result, tmp);
+    tmp[0] = c;
+    tmp[1] = '\0';
+    new_result = ft_strjoin(*result, tmp); // Don't free here
+    if (!new_result)
+    {
+        free(*result);
+        *result = NULL;
+        return;
+    }
+    *result = new_result;
 }
 
 int	handle_special_var(char **result, int i)
