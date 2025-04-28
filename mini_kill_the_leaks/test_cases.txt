@@ -10,7 +10,7 @@ valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./minishell
 7. 	 (just tab) -- OK
 8. echo "" -- OK
 9. exit -------- biggest jebaka, ju OK
-9.bis EXIT, enter, a potem exit. leaki:
+9.bis. EXIT, enter, a potem exit -- chyba problem samego EXIT. leaki:
 
 
 ==11112== 5 bytes in 1 blocks are still reachable in loss record 2 of 75
@@ -113,20 +113,20 @@ valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./minishell
 ==11112==    by 0x10B313: main (main.c:29)
 ==11112== 
 
+10. exit 42 -- OK
+11. exit 300 -- OK
+12. exit abc -- OK, leak add_history
+13. /bin/ls /nonexistent → echo $?   byly leaks, tera tylko add_history:
 
 
 
-10. exit 42
-11. exit 300
-12. exit abc
-13. /bin/ls /nonexistent → echo $?
-14. [Test ctrl-C in empty prompt]
-15. [Test ctrl-\ in empty prompt]
-16. [Test ctrl-D in empty prompt]
-17. Type cat → ctrl-C → check buffer
-18. echo "hello   world"
-19. echo 'hello   $USER'
-20. echo "'$USER'"
+14. [Test ctrl-C in empty prompt]  -- OK, bylo be leakow
+15. [Test ctrl-\ in empty prompt]  -- OK, bylo be leakow
+16. [Test ctrl-D in empty prompt]  -- OK
+17. Type cat → ctrl-C → check buffer --- OK
+18. echo "hello   world"    ---OK
+19. echo 'hello   $USER'    --OK, tylko add_history
+20. echo "'$USER'"         --OK
 21. echo '"$USER"'
 22. echo $USER
 23. export TEST=123 → echo $TEST

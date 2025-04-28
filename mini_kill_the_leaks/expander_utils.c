@@ -31,9 +31,25 @@ void append_char(char **result, char c)
     }
     *result = new_result;
 }
+//diala, ale with leaks on /bin/ls /nonexistent
+// int	handle_special_var(char **result, int i)
+// {
+// 	*result = ft_strjoin_free(*result, ft_itoa(g_exit_status));
+// 	return (i + 2);
+// }
 
-int	handle_special_var(char **result, int i)
+int handle_special_var(char **result, int i)
 {
-	*result = ft_strjoin_free(*result, ft_itoa(g_exit_status));
-	return (i + 2);
+    char *exit_status_str = ft_itoa(g_exit_status);
+    if (!exit_status_str)
+        return (-1);  // Error handling
+    
+    char *new_result = ft_strjoin_free(*result, exit_status_str);
+    free(exit_status_str);  // Free the string after using it
+    
+    if (!new_result)
+        return (-1);
+    
+    *result = new_result;
+    return (i + 2);
 }
