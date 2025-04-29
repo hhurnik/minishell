@@ -107,6 +107,7 @@ void handle_child_process(t_cmd *cmd, t_env **env, int prev_pipe_read, int *pipe
         execute_external(cmd, *env);
 }
 
+//leaki
 void execute_external(t_cmd *cmd, t_env *env)
 {
     char *path = NULL;

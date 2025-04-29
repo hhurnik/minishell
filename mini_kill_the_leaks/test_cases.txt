@@ -129,12 +129,12 @@ valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./minishell
 23. export TEST=123 → echo $TEST   --OK, tylko add_history jak wsedie
 24. unset USER → echo $USER    ----OK
 
-25. export PATH= → ls  - diala incorrectly, leakow te duo:
+25. export PATH= → ls  - diala dobre, ale , leakow te duo:
 
 u nas:
 minishell$ export PATH=
 minishell$ ls
-minishell$
+minishell: ls: command not found
 
 powimno byc:
 s$ export PATH=

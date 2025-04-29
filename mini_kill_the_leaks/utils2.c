@@ -47,6 +47,7 @@ char	*check_absolute_path(char *cmd)
 }
 
 /* Main function to find executable path */
+//leaki
 char	*get_exec_path(char *cmd, t_env *env)
 {
 	char	*path_value;
@@ -72,7 +73,6 @@ char	*get_exec_path(char *cmd, t_env *env)
 	ft_free_split(path_dirs);
 	return (exec_path);
 }
-
 /* Helper function to search through PATH directories */
 char	*search_in_path_dirs(char *cmd, char **dirs)
 {

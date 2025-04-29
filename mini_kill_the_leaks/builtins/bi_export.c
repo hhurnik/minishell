@@ -28,6 +28,7 @@ void	print_env_export_format(t_env *env)
 	}
 }
 
+//diala, leakami
 int	parse_env_var(const char *var, char **key, char **value)
 {
 	char	*equals;
@@ -52,7 +53,9 @@ int	parse_env_var(const char *var, char **key, char **value)
 	return (SUCCESS);
 }
 
+
 /* Function 2: Update or add the environment variable to the list */
+//diala,  leakami
 int	set_env_var(const char *var, t_env **env)
 {
 	char	*key;

@@ -233,7 +233,7 @@ void process_input(char *input, t_env **env)
         
         setup_signals_for_prompt();
     }
-    
+
     // Only clean up if we didn't call exit
     free_cmds(cmds);
     free_tokens(tokens);

@@ -39,7 +39,7 @@ void free_env_node(t_env *node)
         free(node);
     }
 }
-
+//leakami 28.04
 t_env *env_new(const char *key, const char *value)
 {
     t_env *new_var;
@@ -81,6 +81,7 @@ t_env	*get_env(const char *key, t_env *env)
 	return (NULL);
 }
 
+//leaki
 char	*get_env_value(const char *key, t_env *env)
 {
 	t_env	*var;
@@ -90,6 +91,8 @@ char	*get_env_value(const char *key, t_env *env)
 		return (NULL);
 	return (var->value);
 }
+
+
 
 // dodaje new node to the end of a linked list of t_env nodes
 void	env_add_back(t_env **env, t_env *new_node)

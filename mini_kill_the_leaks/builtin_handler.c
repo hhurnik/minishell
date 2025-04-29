@@ -66,17 +66,6 @@ int handle_parent_builtin(t_cmd *cmd, t_fds fds, t_resources *res)
 }
 
 
-//2 leaki
-// int	handle_single_builtin(t_cmd *cmds, t_env **env, int stdin_copy,
-// 	int stdout_copy)
-// {
-// 	if (is_builtin(cmds->args[0]) && !cmds->next)
-// 	{
-// 		handle_parent_builtin(cmds, env, stdin_copy, stdout_copy);
-// 		return (1);
-// 	}
-// 	return (0);
-// }
 int handle_single_builtin(t_cmd *cmds, t_resources *res)
 {
     if (is_builtin(cmds->args[0]) && !cmds->next)
