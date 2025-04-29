@@ -1,6 +1,42 @@
 valgrind command to run:
 valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./minishell 2> valgrind_errors.txt
 
+
+
+PROBLEMS ---------- many many many leaks:
+
+9.bis. EXIT, enter, a potem exit -- chyba problem samego EXIT, tak samo jak dsbksdgbksdghsd
+25. export PATH= → ls   -- a lot of leaks
+47. cd ~ → pwd  ---- 1 leak:
+50. dsbksdgbksdghsd    -- some leaks
+
+
+
+
+
+PROBLEMS ---------- WORKS DIFFERENT TO bash
+
+37. echo "hello""world" -- SHOULD OUTPUT helloworld, IT OUTPUTS hello world, but no leaks 
+42. cat | cat | ls  -- ITS NOT WORKING 100% CORRECTLY - pipes need several exits - i will check it ~Hondia
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 1. /bin/ls -- fixed, leaks only from readline/add_history - 
 2. /bin/ls -l /tmp -- add_history leaks, same as above OK
 3. /bin/echo "Hello World" -- OK, fixed leaks, just add_history, i wont keep repeating anymore - to be fixed, no other leaks
@@ -248,28 +284,42 @@ honroot@Lenovo:/mnt/c/Users/H
 ==11721==    by 0x10B2DE: main (main.c:12)
 
 
-26. cd /tmp → pwd
-27. cd .. → pwd
-28. cd /nonexistent
-29. echo "test" > file1 → cat file1
-30. echo "append" >> file1
-31. cat < file1
-32. cat << EOF
-33. ls | grep "file"
-34. cat file1 | wc -l
-35. ls /nonexistent | grep "txt"
-36. echo *
-37. echo "hello""world"
-38. export A=1 B=2 → echo $A $B
-39. exit 999999 → echo $?
-40. /bin/ls / /nonexistent
-41. echo -e "\x41"
-42. cat | cat | ls
-43. echo "$USER$PATH"
-44. echo '$$'
-45. echo "$?" (after ctrl-C)
-46. cd . → pwd
-47. cd ~ → pwd
-48. echo "   "
-49. echo -n -n -n hello
+26. cd /tmp → pwd  - ----   ok, no leaks, works
+27. cd .. → pwd    ----OK, NO LEAKS, WORKD
+28. cd /nonexistent  ----OK, NO LEAKS, just add_hiatory - cy to jest traktowane jako readline? from this library
+29. echo "test" > file1 → cat file1   ---OK, DIALA, NO LEAKS
+30. echo "append" >> file1   ------OK, no leaks, works
+31. cat < file1   ------OK, WORKS, NO LEAKS
+32. cat << EOF   -------OK, NO LEAKS, WORKS
+33. ls | grep "file"   -----ok, no leaks, works
+34. cat file1 | wc -l    -----OK, WORKS, NO LEAKS
+35. ls /nonexistent | grep "txt"  -----OK, NO LEAKS, DIALA
+36. echo * ----chyba nie mamy obslugiwac, wildcard jest w bonusie
+
+37. echo "hello""world" - SHOULD OUTPUT helloworld, IT OUTPUTS hello world, but no leaks 
+
+38. export A=1 B=2 → echo $A $B   ----OK, WORKS, NO LEAKS
+39. exit 999999 → echo $?   ----OK! WORKS, GIVES 63
+40. /bin/ls / /nonexistent ----ok, no leaks and works
+41. echo -e "\x41" -- not our case, -n only ption, so OK
+42. cat | cat | ls   ------OK, NO LEAKS, BUT ITS NOT WORKING 100% CORRECTLY - pipes need several exits - i will check it ~Hondia
+43. echo "$USER$PATH" -------OK
+44. echo '$$'  ---------OK
+45. echo "$?" (after ctrl-C) -----OK
+46. cd . → pwd ------OK
+47. cd ~ → pwd  ---- 1 leak:
+
+
+==785== 82 bytes in 1 blocks are definitely lost in loss record 17 of 64
+==785==    at 0x4850408: realloc (vg_replace_malloc.c:1801)
+==785==    by 0x49D07BC: getcwd (getcwd.c:86)
+==785==    by 0x10C5A7: bi_cd (bi_cd.c:61)
+==785==    by 0x10952C: run_builtin (builtin_handler.c:28)
+==785==    by 0x10958A: handle_parent_builtin (builtin_handler.c:62)
+==785==    by 0x10B585: process_input (main_utils.c:229)
+==785==    by 0x10B35B: main (main.c:30)
+==785== 
+
+48. echo "   "           ---- OK, just add_history
+49. echo -n -n -n hello  --- OK, just add_history
 50. dsbksdgbksdghsd
