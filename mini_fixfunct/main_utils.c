@@ -35,7 +35,7 @@ void handle_eof(int exit_status)
     exit(exit_status);
 }
 
-//moje
+
 void process_input(char *input, t_env **env)
 {
     t_token *tokens = NULL;
@@ -64,25 +64,27 @@ void process_input(char *input, t_env **env)
     }
     
     res.cmds = cmds;  // Save commands in resources
+    ///poniej
+    if (cmds->args && cmds->args[0])
+    {
+        setup_signals_for_command(); // Set handlers for command execution
     
-    if (cmds->args && cmds->args[0]) {
-        setup_signals_for_command();
-        
-        // Pass the COMPLETE resources structure
-        if (is_builtin(cmds->args[0])) 
+    
+        if (is_builtin(cmds->args[0]) && !cmds->next)
         {
-            // Create and initialize t_fds structure with the duplicated file descriptors
+           
             t_fds fds;
-            fds.stdin = dup(STDIN_FILENO);
+            fds.stdin = dup(STDIN_FILENO); // Backup std fds
             fds.stdout = dup(STDOUT_FILENO);
-            
-            // Pass the properly initialized t_fds to handle_parent_builtin
+           
             handle_parent_builtin(cmds, fds, &res);
-        } else {
-            execute(cmds, env);
         }
-        
-        setup_signals_for_prompt();
+        else
+        {
+            execute(cmds, env); // This function contains execute_pipeline -> wait_for_children
+        }
+    
+        setup_signals_for_prompt(); // Reset handlers for the next prompt
     }
 
     // Only clean up if we didn't call exit
@@ -90,6 +92,8 @@ void process_input(char *input, t_env **env)
     free_tokens(tokens);
     free(input);
 }
+
+
 
 void	clean_cmds_tokens_input(t_cmd *cmds, t_token *tokens, char *input)
 {

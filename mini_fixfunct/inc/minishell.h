@@ -36,6 +36,7 @@ typedef struct s_env
 {
 	char			*key;
 	char			*value;
+	int is_exported; ///added for export, env , pipes ghost=123
 	struct s_env	*next;
 }	t_env;
 
@@ -131,7 +132,8 @@ void	process_command(t_cmd *cmd, t_env **env, int prev_pipe_read,
 			int *pipe_fd);
 int		init_execution(t_cmd *cmds, int *stdin_copy, int *stdout_copy);
 void	cleanup_execution(int stdin_copy, int stdout_copy);
-void	wait_for_children(void);
+//void	wait_for_children(void);
+void wait_for_children(pid_t last_cmd_pid);
 
 // pipes.c
 void	cleanup_pipes(int *pipe_fd, int *prev_pipe_read);
