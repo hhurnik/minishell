@@ -51,6 +51,12 @@ void execute_pipeline(t_cmd *cmds, t_env **env, int *prev_pipe_read)
         current_cmd = current_cmd->next; // Move to the next command
     }
 
+    if (*prev_pipe_read != -1) 
+    {
+        close(*prev_pipe_read);
+        *prev_pipe_read = -1; // Optional: Reset to indicate closed
+    }
+
     // Wait for all children, passing the PID of the last one
     wait_for_children(last_pid);
 }

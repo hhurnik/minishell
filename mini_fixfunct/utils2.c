@@ -73,7 +73,7 @@ char	*get_exec_path(char *cmd, t_env *env)
 	ft_free_split(path_dirs);
 	return (exec_path);
 }
-/* Helper function to search through PATH directories */
+
 char	*search_in_path_dirs(char *cmd, char **dirs)
 {
 	int			i;
@@ -88,7 +88,10 @@ char	*search_in_path_dirs(char *cmd, char **dirs)
 			dir = "."; // Handle empty paths (e.g., PATH=:/bin)
 		full_path = ft_strjoin3(dir, "/", cmd);
 		if (!full_path)
+		{
+			i++;
 			continue ;
+		};
 		// w oryginale ponizej jeszcze w ifie ft_split_free
 		if (access(full_path, X_OK) == 0)
 			return (full_path);

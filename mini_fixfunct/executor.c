@@ -15,33 +15,14 @@ void cleanup(t_resources *res)
     rl_clear_history();
 }
 // //moje
-// void	process_command(t_cmd *cmd, t_env **env, int prev_pipe_read,
-// 		int *pipe_fd)
-// {
-// 	pid_t pid;
-
-// 	pid = setup_pipe_and_fork(cmd, pipe_fd);
-// 	if (pid == 0)
-// 		handle_child_process(cmd, env, prev_pipe_read, pipe_fd);
-// }
-
-
-void process_command(t_cmd *cmd, t_env **env, int prev_pipe_read, int *pipe_fd)
+void	process_command(t_cmd *cmd, t_env **env, int prev_pipe_read,
+		int *pipe_fd)
 {
-    pid_t pid;
+	pid_t pid;
 
-    // If it's export and it's the first command in the pipeline, run it in the parent
-    if (cmd->args && !cmd->next && !strcmp(cmd->args[0], "export")) {
-        t_resources res = {0};
-        res.env = *env;
-        res.cmds = cmd;
-        g_exit_status = run_builtin(cmd, &res);
-        return;
-    }
-
-    pid = setup_pipe_and_fork(cmd, pipe_fd);
-    if (pid == 0)
-        handle_child_process(cmd, env, prev_pipe_read, pipe_fd);
+	pid = setup_pipe_and_fork(cmd, pipe_fd);
+	if (pid == 0)
+		handle_child_process(cmd, env, prev_pipe_read, pipe_fd);
 }
 
 int	init_execution(t_cmd *cmds, int *stdin_copy, int *stdout_copy)
@@ -61,7 +42,6 @@ void	cleanup_execution(int stdin_copy, int stdout_copy)
 	setup_signals_for_prompt();
 	restore_std_fds(stdin_copy, stdout_copy);
 }
-
 
 void wait_for_children(pid_t last_cmd_pid)
 {

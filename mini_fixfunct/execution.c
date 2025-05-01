@@ -53,7 +53,6 @@ int	setup_pipe_and_fork(t_cmd *cmd, int *pipe_fd)
 	return (pid);
 }
 
-//2 leaki, ok
 void handle_child_process(t_cmd *cmd, t_env **env, int prev_pipe_read, int *pipe_fd)
 {
     t_resources res;
@@ -100,28 +99,20 @@ void execute_external(t_cmd *cmd, t_env *env)
     if (path)
     {
         execve(path, cmd->args, env_arr);
-        // If execve fails, free resources and exit with a specific code
+        
+        // execve failed — clean up and exit immediately
+        perror("minishell"); // Helpful for debugging
+        ft_free_split(env_arr);
         free(path);
-    }
-
-    // Free the environment array
-    ft_free_split(env_arr);
-
-    // Handle cases where the command is not found or not executable
-    if (path == NULL)
-    {
-        // Command not found in PATH
-        ft_putstr_fd("minishell: ", STDERR_FILENO);
-        ft_putstr_fd(cmd->args[0], STDERR_FILENO);
-        ft_putstr_fd(": command not found\n", STDERR_FILENO);
-        exit(127); // Exit code for "command not found"
+        exit(126);
     }
     else
     {
-        // If execve failed for some other reason
+        // Command not found
         ft_putstr_fd("minishell: ", STDERR_FILENO);
         ft_putstr_fd(cmd->args[0], STDERR_FILENO);
-        ft_putstr_fd(": failed to execute\n", STDERR_FILENO);
-        exit(126); // Exit code for "found but not executable"
+        ft_putstr_fd(": command not found\n", STDERR_FILENO);
+        ft_free_split(env_arr);
+        exit(127);
     }
 }

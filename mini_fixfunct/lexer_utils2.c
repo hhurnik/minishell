@@ -18,28 +18,23 @@ int	handle_quote(char *input, int *i, t_token **tokens, int *error)
 	return (0);
 }
 
-char	*read_quoted_content(char *input, int *i, t_quote quote, int *error)
+char *read_quoted_content(char *input, int *i, t_quote quote, int *error)
 {
-	char	quote_char;
-	int		start;
-	char	*content;
+    char quote_char = (quote == SINGLE_QUOTE) ? '\'' : '"';
+    int start = *i;
+    while (input[*i] && input[*i] != quote_char)
+        (*i)++;
 
-	if (quote == SINGLE_QUOTE)
-		quote_char = '\'';
-	else
-		quote_char = '"';
-	start = *i;
-	while (input[*i] && input[*i] != quote_char)
-		(*i)++;
-	if (input[*i] != quote_char)
-	{
-		*error = 1;
-		return (NULL);
-	}
-	content = ft_substr(input, start, *i - start);
-	(*i)++;
-	return (content);
+    if (input[*i] != quote_char) {
+        *error = 1;  // Ustaw błąd jeśli nie znaleziono zamykającego cytatu
+        return NULL;
+    }
+
+    char *content = ft_substr(input, start, *i - start);
+    (*i)++;  // Zwiększ indeks, aby przejść po zamykającym cudzysłowie
+    return content;
 }
+
 
 //2 leaks
 void free_tokens(t_token *tokens)
