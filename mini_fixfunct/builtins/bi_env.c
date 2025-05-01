@@ -4,6 +4,7 @@
  * env builtin command - wypisuje all env variables
  * Format: NAME=VALUE (one per line)
  */
+//moje, be grep halo=123 cos tam
 int	bi_env(char **args, t_env **env)
 {
 	t_env	*current;

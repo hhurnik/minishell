@@ -29,28 +29,6 @@ int run_builtin(t_cmd *cmd, t_resources *res)
     return (0);
 }
 
-//2 leaki, ok!
-// int handle_parent_builtin(t_cmd *cmd, t_env **env, int stdin_copy, int stdout_copy)
-// {
-//     t_resources res;
-
-//     res.env = *env;
-//     res.cmds = cmd;
-//     res.tokens = NULL; // Tokens are not used here
-//     res.input = NULL;  // Input is not used here
-
-//     if (setup_redirections(cmd->redirections) < 0)
-//     {
-//         restore_std_fds(stdin_copy, stdout_copy);
-//         free_cmds(cmd);
-//         free_env(*env);
-//         return (1);
-//     }
-//     g_exit_status = run_builtin(cmd, &res); // Pass res instead of env
-//     restore_std_fds(stdin_copy, stdout_copy);
-//     return (1);
-// }
-
 int handle_parent_builtin(t_cmd *cmd, t_fds fds, t_resources *res)
 {
     if (setup_redirections(cmd->redirections) < 0)

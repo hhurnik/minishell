@@ -5,6 +5,7 @@
  * - tokens: podwójny wskaźnik do aktualnego tokenu (np. `>` lub `<<`).
  * - cmd: bieżąca komenda, do której dodawane jest przekierowanie.
  */
+//moje
 void	handle_redirection_parser(t_token **tokens, t_cmd *cmd)
 {
 	t_redir	*new_redir;

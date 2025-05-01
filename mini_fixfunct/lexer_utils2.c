@@ -1,17 +1,11 @@
 #include "inc/minishell.h"
 
-void	finalize_current_word(t_token **tokens, char **current_word)
-{
-	add_token(tokens, *current_word, T_WORD);
-	free(*current_word);
-	*current_word = NULL;
-}
 
 int	handle_quote(char *input, int *i, t_token **tokens, int *error)
 {
-	t_quote			current_quote;
-	char			*quoted;
-	t_token_type	quote_type;
+	t_quote current_quote;
+	char *quoted;
+	t_token_type quote_type;
 
 	current_quote = get_quote_type(input[*i]);
 	(*i)++;
@@ -27,52 +21,32 @@ int	handle_quote(char *input, int *i, t_token **tokens, int *error)
 
 char	*read_quoted_content(char *input, int *i, t_quote quote, int *error)
 {
-	char	quote_char;
-	int		start;
-	char	*content;
-
-	if (quote == SINGLE_QUOTE)
-		quote_char = '\'';
-	else
-		quote_char = '"';
-	start = *i;
+	char quote_char = (quote == SINGLE_QUOTE) ? '\'' : '"';
+	int start = *i;
 	while (input[*i] && input[*i] != quote_char)
 		(*i)++;
+
 	if (input[*i] != quote_char)
 	{
-		*error = 1;
+		*error = 1; // Ustaw błąd jeśli nie znaleziono zamykającego cytatu
 		return (NULL);
 	}
-	content = ft_substr(input, start, *i - start);
-	(*i)++;
+
+	char *content = ft_substr(input, start, *i - start);
+	(*i)++; // Zwiększ indeks, aby przejść po zamykającym cudzysłowie
 	return (content);
 }
 
-//stare - diala program, ale valgrind wywala bledy
-// void	free_tokens(t_token *tokens)
-// {
-// 	t_token	*tmp;
-
-// 	while (tokens)
-// 	{
-// 		tmp = tokens;
-// 		tokens = tokens->next;
-// 		free(tmp->value);
-// 		free(tmp);
-// 	}
-// }
-
-//2 leaks
-void free_tokens(t_token *tokens)
+void	free_tokens(t_token *tokens)
 {
-    t_token *tmp;
+	t_token *tmp;
 
-    while (tokens)
-    {
-        tmp = tokens;
-        if (tokens->value)
-            free(tokens->value); // <<< Free the string!
-        tokens = tokens->next;
-        free(tmp);
-    }
+	while (tokens)
+	{
+		tmp = tokens;
+		if (tokens->value)
+			free(tokens->value); // <<< Free the string!
+		tokens = tokens->next;
+		free(tmp);
+	}
 }
