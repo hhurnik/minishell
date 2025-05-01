@@ -15,6 +15,7 @@
 # include <sys/types.h>
 # include <sys/wait.h>
 # include <unistd.h>
+#include <sys/stat.h> 
 
 // constants
 # define SUCCESS 0
@@ -334,6 +335,7 @@ int	create_heredoc_pipe(int pipe_fd[2]);
 void	process_heredoc_line(int write_fd, char *line);
 int	handle_heredoc(const char *delimiter);
 int	handle_heredoc_redir(char *delimiter);
+void shift_empty_args(t_cmd *cmds);
 
 // int handle_quoted_token(char *input, int *i, t_token **tokens, int *error);
 // int append_char_to_word(char **word, char c);

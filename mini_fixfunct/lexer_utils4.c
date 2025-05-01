@@ -21,7 +21,7 @@ void	validate_redirection_syntax(t_token **tokens)
 			ft_putstr_fd("Missing file name after redirection\n",
 				STDERR_FILENO);
 			*tokens = NULL;
-				// To indicate an error and avoid further processing
+			// To indicate an error and avoid further processing
 		}
 	}
 }

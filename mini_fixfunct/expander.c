@@ -18,8 +18,7 @@ char	*extract_var_name(char *str)
 	return (ft_substr(str, 0, len));
 }
 
-// diala ale nie dla '$pwd'
-void expand_variables(t_token *tokens, t_env *env)
+void	expand_variables(t_token *tokens, t_env *env)
 {
 	char *expanded;
 
@@ -41,7 +40,6 @@ void expand_variables(t_token *tokens, t_env *env)
 		tokens = tokens->next;
 	}
 }
-
 
 int	handle_braced_var(char **result, char *str, int i, t_env *env)
 {
@@ -92,20 +90,6 @@ char	*expand_str(char *str, t_env *env)
 	i = 0;
 	while (str[i])
 	{
-		// if (str[i] == '\'') // Pomija expanję w pojedynczych cudzysłowach
-		// {
-		// 	char *quote_content = remove_quotes(str + i, '\'');
-		// 	char *new_result = ft_strjoin_free(result, quote_content);
-		// 	free(quote_content);
-		// 	if (!new_result)
-		// 	{
-		// 		free(result);
-		// 		return (NULL);
-		// 	}
-		// 	result = new_result;
-		// 	free(new_result);
-		// 	i += ft_strlen(quote_content) + 2; // +2 dla cudzysłowów
-		// }
 		if (is_special_var(str, i))
 			i = handle_special_var(&result, i);
 		else if (is_braced_var(str, i))

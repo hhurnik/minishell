@@ -1,45 +1,45 @@
 ---- OK FROM NORMINETTE, JUST REMOVE COMMENTS LATER -----
 ---- NOT OKAY - LINES TOO LONG --------------------------
 
-1. builtin_handler.c    OK
-2. env_utils.c          OK
-3. init_env.C           OK
-4. execution.c          OK
-5. executor_utils.c     OK
-6. executor.C           OK
-7. expander.c           OK
-8. lexer.C              OK
-9. main.c               OK
-10. main_utils.C        OK
-11. parser_utils.C      OK
-12. parser_utils2.C     OK
-13. parser.C            OK (po usunieciu komentarzy)
-14. pipes.C             OK
-15. signals.C           OK
-16. utils.C             OK
-17. utils2.C            OK
+1. builtin_handler.c    
+2. env_utils.c          
+3. init_env.C           
+4. execution.c          
+5. executor_utils.c     
+6. executor.C           
+7. expander.c           
+8. lexer.C              
+9. main.c               
+10. main_utils.C        
+11. parser_utils.C      
+12. parser_utils2.C     
+13. parser.C            
+14. pipes.C             
+15. signals.C           
+16. utils.C             
+17. utils2.C            
 
 
 BUILTINS:
-1. bi_cd.C              NOT OKAY - nowe do podzialu 26 lines
-2. bi_cd_utils.C        OK
-3. bi_cd_special_case.C OK
-2. bi_echo.C            OK
-3. bi_env.C             OK
-4. bi_exit.C            OK
-5. bi_export.C          NOT OKAY -nowe po valgrindzie
-6. bi_pwd.C             OK
-7. bi_unset.c           OK (po usunieciu komentarzy)
+1. bi_cd.C              
+2. bi_cd_utils.C        
+3. bi_cd_special_case.C 
+2. bi_echo.C            
+3. bi_env.C             
+4. bi_exit.C            
+5. bi_export.C          
+6. bi_pwd.C             
+7. bi_unset.c           
 
 REDIRECTIONS:
 
-1. input_output_append.c OK
-2. heredoc.C             OK
-3. redirs_execute.C      OK
+1. input_output_append.c 
+2. heredoc.C             
+3. redirs_execute.C      
 
 
 HEADER:
-minishell.h              OK
+minishell.h              
 
 
 
@@ -47,9 +47,4 @@ minishell.h              OK
 
 
 NOTES:
-1. env_utils.c --> funkkcja init_env rozdzielona, teraz w pliku init_env.C
-2. divided main in main, dodalam brakujacy kod w loopach
-3. history stopped working after dividing main - juz naprawione
-4. bi_cd podzielone na bi_utils.c, bi_cd_special_case.c, bi_cd.c
-5. is_valid_identifier() functions in both export.c and unset.c
 

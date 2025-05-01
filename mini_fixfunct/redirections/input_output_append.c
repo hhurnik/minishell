@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   input_output_append.c                              :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: hhurnik <hhurnik@student.42.fr>            +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/04/11 15:32:38 by hhurnik           #+#    #+#             */
-/*   Updated: 2025/04/24 20:29:08 by hhurnik          ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "minishell.h"
 
 // dup - tworzy kopie file descriptora oldfd, using the lowest-numbered
