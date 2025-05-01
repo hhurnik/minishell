@@ -1,0 +1,333 @@
+valgrind command to run:
+valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./minishell 2> valgrind_errors.txt
+
+
+
+PROBLEMS ---------- many many many leaks:
+
+9.bis. EXIT, enter, a potem exit -- chyba problem samego EXIT, tak samo jak dsbksdgbksdghsd
+25. export PATH= → ls   -- a lot of leaks
+47. cd ~ → pwd  ---- 1 leak:
+50. dsbksdgbksdghsd    -- some leaks
+
+
+
+
+
+PROBLEMS ---------- WORKS DIFFERENT TO bash
+
+37. echo "hello""world" -- SHOULD OUTPUT helloworld, IT OUTPUTS hello world, but no leaks 
+
+        if tthe "" are next to each other it should be 
+            - echo "foo""bar" --- foobar
+            - echo 'foo'"bar" --- foobar
+            
+
+
+
+42. cat | cat | ls  -- ITS NOT WORKING 100% CORRECTLY - pipes need several exits - i will check it ~Hondia
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+1. /bin/ls -- fixed, leaks only from readline/add_history - 
+2. /bin/ls -l /tmp -- add_history leaks, same as above OK
+3. /bin/echo "Hello World" -- OK, fixed leaks, just add_history, i wont keep repeating anymore - to be fixed, no other leaks
+4. /bin/echo -n "No newline" -  OK
+5.    /bin/ls    (spaces around command)- OK, naprawione
+6.  (just space) - OK
+7. 	 (just tab) -- OK
+8. echo "" -- OK
+9. exit -------- biggest jebaka, ju OK
+9.bis. EXIT, enter, a potem exit -- chyba problem samego EXIT. leaki:
+
+
+==11112== 5 bytes in 1 blocks are still reachable in loss record 2 of 75
+==11112==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==11112==    by 0x48A0BAC: xmalloc (in /usr/lib/x86_64-linux-gnu/libreadline.so.8.1)
+==11112==    by 0x4897B39: alloc_history_entry (in /usr/lib/x86_64-linux-gnu/libreadline.so.8.1)
+==11112==    by 0x4899F65: add_history (in /usr/lib/x86_64-linux-gnu/libreadline.so.8.1)
+==11112==    by 0x10B313: main (main.c:29)
+==11112== 
+==11112== 5 bytes in 1 blocks are still reachable in loss record 3 of 75
+==11112==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==11112==    by 0x10BFAD: ft_strjoin_char (utils.c:29)
+==11112==    by 0x10A44A: expand_str (expander.c:127)
+==11112==    by 0x10A13E: expand_variables (expander.c:28)
+==11112==    by 0x10B4AD: process_input (main_utils.c:206)
+==11112==    by 0x10B326: main (main.c:30)
+==11112== 
+==11112== 5 bytes in 1 blocks are still reachable in loss record 4 of 75
+==11112==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==11112==    by 0x10E0E1: ft_strdup (ft_strdup.c:23)
+==11112==    by 0x10B8B6: process_token (parser.c:99)
+==11112==    by 0x10B9AD: parse_tokens (parser.c:132)
+==11112==    by 0x10B4B9: process_input (main_utils.c:208)
+==11112==    by 0x10B326: main (main.c:30)
+==11112== 
+==11112== 12 bytes in 1 blocks are still reachable in loss record 9 of 75
+==11112==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==11112==    by 0x48A0BAC: xmalloc (in /usr/lib/x86_64-linux-gnu/libreadline.so.8.1)
+==11112==    by 0x4899F28: add_history (in /usr/lib/x86_64-linux-gnu/libreadline.so.8.1)
+==11112==    by 0x10B313: main (main.c:29)
+==11112== 
+==11112== 
+==11112== 16 bytes in 1 blocks are still reachable in loss record 15 of 75
+==11112==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==11112==    by 0x10BBDD: add_arg_to_cmd (parser_utils2.c:14)
+==11112==    by 0x10B908: process_token (parser.c:107)
+==11112==    by 0x10B9AD: parse_tokens (parser.c:132)
+==11112==    by 0x10B4B9: process_input (main_utils.c:208)
+==11112==    by 0x10B326: main (main.c:30)
+==11112== 
+==11112== 
+==11112== 24 bytes in 1 blocks are still reachable in loss record 18 of 75
+==11112==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==11112==    by 0x48A0BAC: xmalloc (in /usr/lib/x86_64-linux-gnu/libreadline.so.8.1)
+==11112==    by 0x4897B1D: alloc_history_entry (in /usr/lib/x86_64-linux-gnu/libreadline.so.8.1)
+==11112==    by 0x4899F65: add_history (in /usr/lib/x86_64-linux-gnu/libreadline.so.8.1)
+==11112==    by 0x10B313: main (main.c:29)
+==11112== 
+==11112== 24 bytes in 1 blocks are still reachable in loss record 19 of 75
+==11112==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==11112==    by 0x10A875: add_token (lexer.c:8)
+==11112==    by 0x10AC9A: finalize_current_word (lexer_utils2.c:5)
+==11112==    by 0x10AA8A: tokenize_input (lexer.c:75)
+==11112==    by 0x10B473: process_input (main_utils.c:198)
+==11112==    by 0x10B326: main (main.c:30)
+==11112== 
+==11112== 32 bytes in 1 blocks are still reachable in loss record 21 of 75
+==11112==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==11112==    by 0x10BA75: cmd_new (parser_utils.c:29)
+==11112==    by 0x10B970: parse_tokens (parser.c:127)
+==11112==    by 0x10B4B9: process_input (main_utils.c:208)
+==11112==    by 0x10B326: main (main.c:30)
+==11112== 
+==11112== 
+==11112== 283 bytes in 29 blocks are still reachable in loss record 32 of 75
+==11112==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==11112==    by 0x10E0E1: ft_strdup (ft_strdup.c:23)
+==11112==    by 0x1096A0: env_new (env_utils.c:51)
+==11112==    by 0x10A6C0: handle_env_node_creation (init_env.c:21)
+==11112==    by 0x10A7D7: process_single_env_var (init_env.c:51)
+==11112==    by 0x10A830: init_env (init_env.c:61)
+==11112==    by 0x10B3CC: init_shell (main_utils.c:37)
+==11112==    by 0x10B2A9: main (main.c:12)
+==11112== 
+==11112== 696 bytes in 29 blocks are still reachable in loss record 35 of 75
+==11112==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==11112==    by 0x10967F: env_new (env_utils.c:47)
+==11112==    by 0x10A6C0: handle_env_node_creation (init_env.c:21)
+==11112==    by 0x10A7D7: process_single_env_var (init_env.c:51)
+==11112==    by 0x10A830: init_env (init_env.c:61)
+==11112==    by 0x10B3CC: init_shell (main_utils.c:37)
+==11112==    by 0x10B2A9: main (main.c:12)
+==11112== 
+==11112== 
+==11112== 3,289 bytes in 29 blocks are still reachable in loss record 50 of 75
+==11112==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==11112==    by 0x10E0E1: ft_strdup (ft_strdup.c:23)
+==11112==    by 0x1096D9: env_new (env_utils.c:59)
+==11112==    by 0x10A6C0: handle_env_node_creation (init_env.c:21)
+==11112==    by 0x10A7D7: process_single_env_var (init_env.c:51)
+==11112==    by 0x10A830: init_env (init_env.c:61)
+==11112==    by 0x10B3CC: init_shell (main_utils.c:37)
+==11112==    by 0x10B2A9: main (main.c:12)
+==11112== 
+==11112== 
+==11112== 4,016 bytes in 1 blocks are still reachable in loss record 53 of 75
+==11112==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==11112==    by 0x48A0BAC: xmalloc (in /usr/lib/x86_64-linux-gnu/libreadline.so.8.1)
+==11112==    by 0x4899FD6: add_history (in /usr/lib/x86_64-linux-gnu/libreadline.so.8.1)
+==11112==    by 0x10B313: main (main.c:29)
+==11112== 
+
+10. exit 42 -- OK
+11. exit 300 -- OK
+12. exit abc -- OK, leak add_history
+13. /bin/ls /nonexistent → echo $?   byly leaks, tera tylko add_history:
+14. [Test ctrl-C in empty prompt]  -- OK, bylo be leakow
+15. [Test ctrl-\ in empty prompt]  -- OK, bylo be leakow
+16. [Test ctrl-D in empty prompt]  -- OK
+17. Type cat → ctrl-C → check buffer --- OK
+18. echo "hello   world"    ---OK
+19. echo 'hello   $USER'    --OK, tylko add_history
+20. echo "'$USER'"         --OK
+21. echo '"$USER"' ------- OK
+22. echo $USER  -------- OK
+23. export TEST=123 → echo $TEST   --OK, tylko add_history jak wsedie
+24. unset USER → echo $USER    ----OK
+
+25. export PATH= → ls  - diala dobre, ale , leakow te duo:
+
+u nas:
+minishell$ export PATH=
+minishell$ ls
+minishell: ls: command not found
+
+powimno byc:
+s$ export PATH=
+honroot@Lenovo:/mnt/c/Users/Honorata/OneDrive/Pulpit/minishell_branch_hondia/mini_kill_the_leaks$ ls
+-bash: ls: No such file or directory
+honroot@Lenovo:/mnt/c/Users/H
+
+
+==11721== 1 bytes in 1 blocks are still reachable in loss record 1 of 76
+==11721==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==11721==    by 0x10E121: ft_strdup (ft_strdup.c:23)
+==11721==    by 0x10D1A7: parse_env_var (bi_export.c:44)
+==11721==    by 0x10D22C: set_env_var (bi_export.c:62)
+==11721==    by 0x10D40B: bi_export (bi_export.c:111)
+==11721==    by 0x1094BC: run_builtin (builtin_handler.c:24)
+==11721==    by 0x10958A: handle_parent_builtin (builtin_handler.c:62)
+==11721==    by 0x10B585: process_input (main_utils.c:229)
+==11721==    by 0x10B35B: main (main.c:30)
+==11721== 
+==11721== 
+==11721== 3 bytes in 1 blocks are still reachable in loss record 3 of 76
+==11721==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==11721==    by 0x10BFE2: ft_strjoin_char (utils.c:29)
+==11721==    by 0x10A44A: expand_str (expander.c:127)
+==11721==    by 0x10A13E: expand_variables (expander.c:28)
+==11721==    by 0x10B4E2: process_input (main_utils.c:206)
+==11721==    by 0x10B35B: main (main.c:30)
+==11721== 
+==11721== 3 bytes in 1 blocks are still reachable in loss record 4 of 76
+==11721==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==11721==    by 0x10E121: ft_strdup (ft_strdup.c:23)
+==11721==    by 0x10B8EB: process_token (parser.c:99)
+==11721==    by 0x10B9E2: parse_tokens (parser.c:132)
+==11721==    by 0x10B4EE: process_input (main_utils.c:208)
+==11721==    by 0x10B35B: main (main.c:30)
+==11721== 
+==11721== 
+==11721== 16 bytes in 1 blocks are still reachable in loss record 14 of 76
+==11721==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==11721==    by 0x10BC12: add_arg_to_cmd (parser_utils2.c:14)
+==11721==    by 0x10B93D: process_token (parser.c:107)
+==11721==    by 0x10B9E2: parse_tokens (parser.c:132)
+==11721==    by 0x10B4EE: process_input (main_utils.c:208)
+==11721==    by 0x10B35B: main (main.c:30)
+==11721== 
+==11721== 16 bytes in 2 blocks are still reachable in loss record 15 of 76
+==11721==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==11721==    by 0x48A0BAC: xmalloc (in /usr/lib/x86_64-linux-gnu/libreadline.so.8.1)
+==11721==    by 0x4897B39: alloc_history_entry (in /usr/lib/x86_64-linux-gnu/libreadline.so.8.1)
+==11721==    by 0x4899F65: add_history (in /usr/lib/x86_64-linux-gnu/libreadline.so.8.1)
+==11721==    by 0x10B348: main (main.c:29)
+==11721== 
+==11721== 24 bytes in 1 blocks are still reachable in loss record 18 of 76
+==11721==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==11721==    by 0x10A8AA: add_token (lexer.c:8)
+==11721==    by 0x10ACCF: finalize_current_word (lexer_utils2.c:5)
+==11721==    by 0x10AABF: tokenize_input (lexer.c:75)
+==11721==    by 0x10B4A8: process_input (main_utils.c:198)
+==11721==    by 0x10B35B: main (main.c:30)
+==11721== 
+==11721== 24 bytes in 2 blocks are still reachable in loss record 19 of 76
+==11721==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==11721==    by 0x48A0BAC: xmalloc (in /usr/lib/x86_64-linux-gnu/libreadline.so.8.1)
+==11721==    by 0x4899F28: add_history (in /usr/lib/x86_64-linux-gnu/libreadline.so.8.1)
+==11721==    by 0x10B348: main (main.c:29)
+==11721
+==11721== 
+==11721== 32 bytes in 1 blocks are still reachable in loss record 21 of 76
+==11721==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==11721==    by 0x10BAAA: cmd_new (parser_utils.c:29)
+==11721==    by 0x10B9A5: parse_tokens (parser.c:127)
+==11721==    by 0x10B4EE: process_input (main_utils.c:208)
+==11721==    by 0x10B35B: main (main.c:30)
+==11721== 
+==11721== 48 bytes in 2 blocks are still reachable in loss record 25 of 76
+==11721==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==11721==    by 0x48A0BAC: xmalloc (in /usr/lib/x86_64-linux-gnu/libreadline.so.8.1)
+==11721==    by 0x4897B1D: alloc_history_entry (in /usr/lib/x86_64-linux-gnu/libreadline.so.8.1)
+==11721==    by 0x4899F65: add_history (in /usr/lib/x86_64-linux-gnu/libreadline.so.8.1)
+==11721==    by 0x10B348: main (main.c:29)
+==11721== 
+==11721== 
+==11721== 283 bytes in 29 blocks are still reachable in loss record 33 of 76
+==11721==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==11721==    by 0x10E121: ft_strdup (ft_strdup.c:23)
+==11721==    by 0x1096A0: env_new (env_utils.c:51)
+==11721==    by 0x10A6F5: handle_env_node_creation (init_env.c:21)
+==11721==    by 0x10A80C: process_single_env_var (init_env.c:51)
+==11721==    by 0x10A865: init_env (init_env.c:61)
+==11721==    by 0x10B401: init_shell (main_utils.c:37)
+==11721==    by 0x10B2DE: main (main.c:12)
+==11721== 
+==11721== 
+==11721== 696 bytes in 29 blocks are still reachable in loss record 36 of 76
+==11721==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==11721==    by 0x10967F: env_new (env_utils.c:47)
+==11721==    by 0x10A6F5: handle_env_node_creation (init_env.c:21)
+==11721==    by 0x10A80C: process_single_env_var (init_env.c:51)
+==11721==    by 0x10A865: init_env (init_env.c:61)
+==11721==    by 0x10B401: init_shell (main_utils.c:37)
+==11721==    by 0x10B2DE: main (main.c:12)
+==11721== 
+==11721== 2,106 bytes in 28 blocks are still reachable in loss record 50 of 76
+==11721==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==11721==    by 0x10E121: ft_strdup (ft_strdup.c:23)
+==11721==    by 0x1096D9: env_new (env_utils.c:59)
+==11721==    by 0x10A6F5: handle_env_node_creation (init_env.c:21)
+==11721==    by 0x10A80C: process_single_env_var (init_env.c:51)
+==11721==    by 0x10A865: init_env (init_env.c:61)
+==11721==    by 0x10B401: init_shell (main_utils.c:37)
+==11721==    by 0x10B2DE: main (main.c:12)
+
+
+26. cd /tmp → pwd  - ----   ok, no leaks, works
+27. cd .. → pwd    ----OK, NO LEAKS, WORKD
+28. cd /nonexistent  ----OK, NO LEAKS, just add_hiatory - cy to jest traktowane jako readline? from this library
+29. echo "test" > file1 → cat file1   ---OK, DIALA, NO LEAKS
+30. echo "append" >> file1   ------OK, no leaks, works
+31. cat < file1   ------OK, WORKS, NO LEAKS
+32. cat << EOF   -------OK, NO LEAKS, WORKS
+33. ls | grep "file"   -----ok, no leaks, works
+34. cat file1 | wc -l    -----OK, WORKS, NO LEAKS
+35. ls /nonexistent | grep "txt"  -----OK, NO LEAKS, DIALA
+36. echo * ----chyba nie mamy obslugiwac, wildcard jest w bonusie
+
+37. echo "hello""world" - SHOULD OUTPUT helloworld, IT OUTPUTS hello world, but no leaks 
+
+38. export A=1 B=2 → echo $A $B   ----OK, WORKS, NO LEAKS
+39. exit 999999 → echo $?   ----OK! WORKS, GIVES 63
+40. /bin/ls / /nonexistent ----ok, no leaks and works
+41. echo -e "\x41" -- not our case, -n only ption, so OK
+42. cat | cat | ls   ------OK, NO LEAKS, BUT ITS NOT WORKING 100% CORRECTLY - pipes need several exits - i will check it ~Hondia
+43. echo "$USER$PATH" -------OK
+44. echo '$$'  ---------OK
+45. echo "$?" (after ctrl-C) -----OK
+46. cd . → pwd ------OK
+47. cd ~ → pwd  ---- 1 leak:
+
+
+==785== 82 bytes in 1 blocks are definitely lost in loss record 17 of 64
+==785==    at 0x4850408: realloc (vg_replace_malloc.c:1801)
+==785==    by 0x49D07BC: getcwd (getcwd.c:86)
+==785==    by 0x10C5A7: bi_cd (bi_cd.c:61)
+==785==    by 0x10952C: run_builtin (builtin_handler.c:28)
+==785==    by 0x10958A: handle_parent_builtin (builtin_handler.c:62)
+==785==    by 0x10B585: process_input (main_utils.c:229)
+==785==    by 0x10B35B: main (main.c:30)
+==785== 
+
+48. echo "   "           ---- OK, just add_history
+49. echo -n -n -n hello  --- OK, just add_history
+50. dsbksdgbksdghsd
