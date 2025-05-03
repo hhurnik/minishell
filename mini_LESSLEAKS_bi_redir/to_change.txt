@@ -1,0 +1,50 @@
+---- OK FROM NORMINETTE, JUST REMOVE COMMENTS LATER -----
+---- NOT OKAY - LINES TOO LONG --------------------------
+
+1. builtin_handler.c    
+2. env_utils.c          
+3. init_env.C           
+4. execution.c          
+5. executor_utils.c     
+6. executor.C           
+7. expander.c           
+8. lexer.C              
+9. main.c               
+10. main_utils.C        
+11. parser_utils.C      
+12. parser_utils2.C     
+13. parser.C            
+14. pipes.C             
+15. signals.C           
+16. utils.C             
+17. utils2.C            
+
+
+BUILTINS:
+1. bi_cd.C              
+2. bi_cd_utils.C        
+3. bi_cd_special_case.C 
+2. bi_echo.C            
+3. bi_env.C             
+4. bi_exit.C            
+5. bi_export.C          
+6. bi_pwd.C             
+7. bi_unset.c           
+
+REDIRECTIONS:
+
+1. input_output_append.c 
+2. heredoc.C             
+3. redirs_execute.C      
+
+
+HEADER:
+minishell.h              
+
+
+
+
+
+
+NOTES:
+
