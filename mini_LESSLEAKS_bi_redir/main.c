@@ -1,36 +1,38 @@
 #include "inc/minishell.h"
-#include <mcheck.h>
 
-int main(int argc, char **argv, char **envp)
+// nowe, podzielone
+static void	handle_no_input(t_env *env)
 {
-    t_env *env;
-    char *input;
-    t_resources res;
+	t_resources	res;
 
-    (void)argc;
-    (void)argv;
-    init_shell(envp, &env);
+	res.env = env;
+	res.cmds = NULL;
+	res.tokens = NULL;
+	res.input = NULL;
+	cleanup(&res);
+	handle_eof(g_exit_status);
+}
 
-    while (1)
-    {
-        input = readline("minishell$ ");
-        if (!input)
-        {
-            res.env = env;
-            res.cmds = NULL;
-            res.tokens = NULL;
-            res.input = NULL;
-            cleanup(&res); // Pass the t_resources structure
-            //handle_eof(env, g_exit_status);
-            handle_eof(g_exit_status);
-        }
-        if (*input)
-        {
-            add_history(input);
-            process_input(input, &env);
-        }
-        else
-            free(input);
-    }
-    return (0);
+int	main(int argc, char **argv, char **envp)
+{
+	t_env	*env;
+	char	*input;
+
+	(void)argc;
+	(void)argv;
+	init_shell(envp, &env);
+	while (1)
+	{
+		input = readline("minishell$ ");
+		if (!input)
+			handle_no_input(env);
+		if (*input)
+		{
+			add_history(input);
+			process_input(input, &env);
+		}
+		else
+			free(input);
+	}
+	return (0);
 }

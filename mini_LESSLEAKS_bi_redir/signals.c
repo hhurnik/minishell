@@ -7,14 +7,14 @@ void	handle_sigint_prompt(int sig)
 	rl_on_new_line();
 	rl_replace_line("", 0);
 	rl_redisplay();
-	g_exit_status = 130; // Set exit status to 130 for Ctrl-C
+	g_exit_status = 130;
 }
 
 void	handle_sigint_command(int sig)
 {
 	(void)sig;
 	write(STDOUT_FILENO, "\n", 1);
-	g_exit_status = 130; // Set exit status to 130 for Ctrl-C
+	g_exit_status = 130;
 }
 
 void	setup_signals_for_prompt(void)

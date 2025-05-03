@@ -26,7 +26,7 @@ char	*ft_strjoin_char(char *s, char c)
 	len = 0;
 	if (s)
 		len = ft_strlen(s);
-	new = malloc(len + 2); // +1 for char, +1 for '\0'
+	new = malloc(len + 2);
 	if (!new)
 		return (NULL);
 	if (s)
