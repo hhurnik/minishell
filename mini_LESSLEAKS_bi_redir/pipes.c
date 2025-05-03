@@ -9,68 +9,54 @@ void	prepare_pipeline_execution(t_cmd *cmds, int *prev_pipe_read)
 
 void	execute_pipeline(t_cmd *cmds, t_env **env, int *prev_pipe_read)
 {
+	pid_t	last_pid;
+	t_cmd	*current_cmd;
+
+	last_pid = -1;
+	current_cmd = cmds;
+	while (current_cmd)
+	{
+		last_pid = process_single_command(current_cmd, env, prev_pipe_read,
+				last_pid);
+		if (last_pid == -2)
+			return ;
+		current_cmd = current_cmd->next;
+	}
+	finalize_pipeline(prev_pipe_read, last_pid);
+}
+
+pid_t	process_single_command(t_cmd *cmd, t_env **env, int *prev_pipe_read,
+		pid_t last_pid)
+{
 	int		pipe_fd[2];
 	pid_t	pid;
 
-	pid_t last_pid = -1;       // Variable to store the PID of the last command
-	t_cmd *current_cmd = cmds; // Use a temporary pointer to iterate
-	while (current_cmd)
+	pipe_fd[0] = -1;
+	pipe_fd[1] = -1;
+	pid = setup_pipe_and_fork(cmd, pipe_fd);
+	if (pid < 0)
 	{
-		pipe_fd[0] = -1;
-		pipe_fd[1] = -1;
-		// Directly call setup_pipe_and_fork here to get the PID
-		pid = setup_pipe_and_fork(current_cmd, pipe_fd);
-		if (pid < 0)
-		{
-			// Fork failed, maybe handle error, break loop?
-			// perror("minishell: fork failed in pipeline");
-			// Consider setting an error status
-			if (*prev_pipe_read != -1)
-				close(*prev_pipe_read); // Cleanup pending read pipe
-			break ;                      // Stop processing pipeline
-		}
-		else if (pid == 0)
-		{
-			// --- Child Process ---
-			// process_command used to call handle_child_process, do it directly
-			handle_child_process(current_cmd, env, *prev_pipe_read, pipe_fd);
-			// handle_child_process exits, so code below won't run in child
-		}
-		else
-		{
-			// --- Parent Process ---
-			// If this is the last command in the list, store its PID
-			if (!current_cmd->next)
-			{
-				last_pid = pid;
-			}
-			// Close pipes in the parent
-			update_pipe_status(current_cmd, prev_pipe_read, pipe_fd);
-		}
-		current_cmd = current_cmd->next; // Move to the next command
+		if (*prev_pipe_read != -1)
+			close(*prev_pipe_read);
+		return (-2);
 	}
+	else if (pid == 0)
+		handle_child_process(cmd, env, *prev_pipe_read, pipe_fd);
+	else
+	{
+		if (!cmd->next)
+			last_pid = pid;
+		update_pipe_status(cmd, prev_pipe_read, pipe_fd);
+	}
+	return (last_pid);
+}
+
+void	finalize_pipeline(int *prev_pipe_read, pid_t last_pid)
+{
 	if (*prev_pipe_read != -1)
 	{
 		close(*prev_pipe_read);
-		*prev_pipe_read = -1; // Optional: Reset to indicate closed
+		*prev_pipe_read = -1;
 	}
-	// Wait for all children, passing the PID of the last one
 	wait_for_children(last_pid);
-}
-
-void	cleanup_pipes(int *pipe_fd, int *prev_pipe_read)
-{
-	if (*prev_pipe_read != -1)
-		close(*prev_pipe_read);
-	if (pipe_fd[1] != -1)
-		close(pipe_fd[1]);
-	*prev_pipe_read = pipe_fd[0];
-}
-
-void	update_pipe_status(t_cmd *cmd, int *prev_pipe_read, int *pipe_fd)
-{
-	if (cmd->next)
-		cleanup_pipes(pipe_fd, prev_pipe_read);
-	else if (pipe_fd[0] != -1)
-		close(pipe_fd[0]);
 }

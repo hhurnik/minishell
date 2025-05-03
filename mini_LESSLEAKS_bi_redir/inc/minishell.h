@@ -108,6 +108,22 @@ typedef struct s_fds
 	int stdout;
 } t_fds;
 
+///dla main_utils2.c
+typedef struct s_input_state {
+	char	*input;
+	int		*i;
+}	t_input_state;
+
+typedef struct s_append_info {
+	int	start;
+	int	len;
+}	t_append_info;
+
+typedef struct s_quote_indices {
+	int	start;
+	int	end_pos;
+}	t_quote_indices;
+
 // ------------------------------------------
 // Prototypy funkcji
 // ------------------------------------------
@@ -136,10 +152,13 @@ void	cleanup_execution(int stdin_copy, int stdout_copy);
 void	wait_for_children(pid_t last_cmd_pid);
 
 // pipes.c
-void	cleanup_pipes(int *pipe_fd, int *prev_pipe_read);
 void	prepare_pipeline_execution(t_cmd *cmds, int *prev_pipe_read);
 void	execute_pipeline(t_cmd *cmds, t_env **env, int *prev_pipe_read);
-// void execute_pipeline(t_cmd *cmds, t_resources *res, int *prev_pipe_read);
+pid_t	process_single_command(t_cmd *cmd, t_env **env, int *prev_pipe_read, pid_t last_pid);
+void	finalize_pipeline(int *prev_pipe_read, pid_t last_pid);
+
+// pipes_utils.c
+void	cleanup_pipes(int *pipe_fd, int *prev_pipe_read);
 void	update_pipe_status(t_cmd *cmd, int *prev_pipe_read, int *pipe_fd);
 
 // i builtinhandler
@@ -185,6 +204,16 @@ int	handle_standard_var(char **result, char *str, int i, t_env *env);
 char	*expand_str(char *str, t_env *env);
 // char	*remove_quotes(char *str, char quote_type);
 
+// handle_quoted_append.c - from main_utils2.c
+int	ensure_word_allocated(char **current_word, int *error);
+int	find_closing_quote(t_input_state *input_state, char quote_char);
+int	extract_and_append_content(t_append_info *info,
+		t_input_state *input_state, char **current_word, int *error);
+int	prepare_and_execute_append(t_quote_indices *indices,
+		t_input_state *input_state, char **current_word, int *error);
+int	handle_quoted_append(t_input_state *input_state, char **current_word,
+		int *error, t_parse_state *state);
+
 // expander_utils.c
 int	is_special_var(char *str, int i);
 int	is_braced_var(char *str, int i);
@@ -224,11 +253,16 @@ void	handle_redirection(char *input, int *i, t_token **tokens);
 // main_utils.c
 void	free_env(t_env *env);
 void	init_shell(char **envp, t_env **env);
-// void	handle_eof(t_env *env, int exit_status);
 void	handle_eof(int exit_status);
-// void	process_input(char *input, t_env **env);
-void	process_input(char *input, t_env **env);
+//void	process_input(char *input, t_env **env);
 void	shift_empty_args(t_cmd *cmds);
+
+//process_input.c
+void process_input(char *input, t_env **env);
+bool initialize_and_tokenize(char *input, t_token **tokens);
+bool prepare_commands(t_token *tokens, t_cmd **cmds, t_resources *res);
+void execute_commands(t_cmd *cmds, t_env **env, t_resources *res);
+
 
 // parser_utils.c
 void	add_redir_to_cmd(t_cmd *cmd, t_redir *new_redir);

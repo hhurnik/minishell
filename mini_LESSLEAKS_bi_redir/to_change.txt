@@ -10,11 +10,14 @@
 7. expander.c           
 8. lexer.C              
 9. main.c                   OK
-10. main_utils.C        
+10. main_utils.C            ok
+10a. process_input.c        OK
+10b. main_utils2.c   
 11. parser_utils.C      
 12. parser_utils2.C     
 13. parser.C            
-14. pipes.C             
+14. pipes.C                 OK
+15. pipes_utils.C           OK
 15. signals.C               OK
 16. utils.C                 OK
 17. utils2.C                OK
