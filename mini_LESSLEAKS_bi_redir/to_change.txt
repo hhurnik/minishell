@@ -5,16 +5,18 @@
 2. env_utils.c              OK
 3. init_env.C               OK
 4. execution.c          
-5. executor_utils.c     
+5. executor_utils.c         OK
 6. executor.C           
 7. expander.c           
-8. lexer.C              
+8. lexer.C                  OK
 9. main.c                   OK
 10. main_utils.C            ok
 10a. process_input.c        OK
 10b. main_utils2.c   
-11. parser_utils.C      
-12. parser_utils2.C     
+10c. handle_quoted_append.C OK
+10d. 10c. handle_quoted_append_utils.C OK
+11. parser_utils.C          ok
+12. parser_utils2.C         OK
 13. parser.C            
 14. pipes.C                 OK
 15. pipes_utils.C           OK

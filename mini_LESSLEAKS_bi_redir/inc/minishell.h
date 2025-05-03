@@ -205,14 +205,22 @@ char	*expand_str(char *str, t_env *env);
 // char	*remove_quotes(char *str, char quote_type);
 
 // handle_quoted_append.c - from main_utils2.c
-int	ensure_word_allocated(char **current_word, int *error);
-int	find_closing_quote(t_input_state *input_state, char quote_char);
 int	extract_and_append_content(t_append_info *info,
 		t_input_state *input_state, char **current_word, int *error);
 int	prepare_and_execute_append(t_quote_indices *indices,
 		t_input_state *input_state, char **current_word, int *error);
+int	find_and_update_for_quote(t_input_state *input_state, int *error,
+	t_parse_state *state, t_quote_indices *indices_out);
+int	append_and_advance_for_quote(t_input_state *input_state,
+	char **current_word, int *error, t_quote_indices *indices);
 int	handle_quoted_append(t_input_state *input_state, char **current_word,
 		int *error, t_parse_state *state);
+
+
+
+//handle_quoted_append_utils.c
+int	ensure_word_allocated(char **current_word, int *error);
+int	find_closing_quote(t_input_state *input_state, char quote_char);
 
 // expander_utils.c
 int	is_special_var(char *str, int i);

@@ -15,7 +15,7 @@ void	add_arg_to_cmd(t_cmd *cmd, char *arg)
 	if (!new_args)
 	{
 		perror("minishell");
-		exit(EXIT_FAILURE); // Or handle more gracefully
+		exit(EXIT_FAILURE);
 	}
 	while (i < count)
 	{
