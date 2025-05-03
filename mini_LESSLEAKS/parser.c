@@ -6,53 +6,6 @@
  * - cmd: bieżąca komenda, do której dodawane jest przekierowanie.
  */
 
-
-//nowe, mniej bledow, ju moje
-// void handle_redirection_parser(t_token **tokens, t_cmd *cmd)
-// {
-//     t_redir *new_redir;
-
-//     new_redir = malloc(sizeof(t_redir));
-//     if (!new_redir)
-//     {
-//         perror("minishell: malloc");
-//         // Consider more robust error handling (e.g., freeing existing cmd structure)
-//         return; // Or exit, or set an error flag
-//     }
-//     new_redir->type = (*tokens)->type;
-//     new_redir->heredoc_fd = -1; // <<< Initialize here
-
-//     // Move to next token (should be filename/delimiter)
-//     *tokens = (*tokens)->next;
-//     if (!*tokens || ((*tokens)->type != T_WORD && (*tokens)->type != T_SINGLE_QUOTED &&
-//                       (*tokens)->type != T_DOUBLE_QUOTED))
-//     {
-//         ft_putstr_fd("minishell: syntax error near unexpected token `", STDERR_FILENO);
-//         // Print the unexpected token if possible, or just a newline
-//          if (*tokens && (*tokens)->value) {
-//              ft_putstr_fd((*tokens)->value, STDERR_FILENO);
-//              ft_putstr_fd("'\n", STDERR_FILENO);
-//          } else {
-//             ft_putstr_fd("newline'\n", STDERR_FILENO);
-//          }
-//         g_exit_status = 2; // Syntax error
-//         free(new_redir);
-//         // Signal error back up the call chain if possible
-//         return;
-//     }
-//     // Assign filename/delimiter
-//     new_redir->file = ft_strdup((*tokens)->value);
-//      if (!new_redir->file) { // Handle strdup failure
-//         perror("minishell: malloc");
-//         free(new_redir);
-//         return; // Or signal error
-//     }
-//     new_redir->next = NULL;
-//     add_redir_to_cmd(cmd, new_redir);
-//     // Move to next token
-//     *tokens = (*tokens)->next;
-// }
-
 void handle_redirection_parser(t_token **tokens, t_cmd *cmd)
 {
     t_redir *new_redir;

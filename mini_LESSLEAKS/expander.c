@@ -41,27 +41,6 @@ void	expand_variables(t_token *tokens, t_env *env)
 	}
 }
 
-// //moje
-// int	handle_braced_var(char **result, char *str, int i, t_env *env)
-// {
-// 	int start;
-// 	char *var_name;
-// 	char *var_value;
-
-// 	start = i + 2;
-// 	while (str[i] && str[i] != '}')
-// 		i++;
-// 	if (str[i] == '}')
-// 	{
-// 		var_name = ft_substr(str, start, i - start);
-// 		var_value = get_env_value(var_name, env);
-// 		*result = ft_strjoin_free(*result, var_value ? var_value : "");
-// 		free(var_name);
-// 		i++;
-// 	}
-// 	return (i);
-// }
-
 //nowe proba naleienia leakow
 int handle_braced_var(char **result, char *str, int i, t_env *env)
 {
@@ -114,28 +93,6 @@ int handle_braced_var(char **result, char *str, int i, t_env *env)
     return (end + 1);     // Return index *after* the closing '}'
 }
 
-
-// //moje
-// int	handle_standard_var(char **result, char *str, int i, t_env *env)
-// {
-// 	char *var_name;
-// 	char *var_value;
-
-// 	var_name = extract_var_name(str + i + 1);
-// 	if (var_name[0] == '\0')
-// 	{
-// 		*result = ft_strjoin_free(*result, "$");
-// 		free(var_name);
-// 		return (i + 1);
-// 	}
-// 	var_value = get_env_value(var_name, env);
-// 	*result = ft_strjoin_free(*result, var_value ? var_value : "");
-// 	i += ft_strlen(var_name) + 1;
-// 	free(var_name);
-// 	return (i);
-// }
-
-//nowe, proba leakowa
 int handle_standard_var(char **result, char *str, int i, t_env *env)
 {
     char *var_name = NULL;
@@ -188,41 +145,7 @@ int handle_standard_var(char **result, char *str, int i, t_env *env)
     return (i + name_len + 1); // Advance past '$' and the variable name
 }
 
-// //dobre, moje
-// char *expand_str(char *str, t_env *env)
-// {
-//     char *result = ft_strdup("");
-//     char *temp_result;
-//     int i = 0;
 
-//     if (!result)
-//         return (NULL);
-
-//     while (str[i])
-//     {
-//         if (is_special_var(str, i))
-//             i = handle_special_var(&result, i);
-//         else if (is_braced_var(str, i))
-//             i = handle_braced_var(&result, str, i, env);
-//         else if (is_standard_var(str, i))
-//             i = handle_standard_var(&result, str, i, env);
-//         else
-//         {
-//             temp_result = ft_strjoin_char(result, str[i]);
-//             if (!temp_result)
-//             {
-//                 free(result);
-//                 return (NULL);
-//             }
-//             result = temp_result;
-//             i++;
-//         }
-//     }
-//     return (result);
-// }
-
-
-//nowe proba leakow
 char *expand_str(char *str, t_env *env)
 {
     char *result = NULL;
@@ -329,23 +252,6 @@ void	append_char(char **result, char c)
 	*result = new_result;
 }
 
-
-// //moje
-// int	handle_special_var(char **result, int i)
-// {
-// 	char *exit_status_str = ft_itoa(g_exit_status);
-// 	if (!exit_status_str)
-// 		return (-1); // Error handling
-
-// 	char *new_result = ft_strjoin_free(*result, exit_status_str);
-// 	free(exit_status_str); // Free the string after using it
-
-// 	if (!new_result)
-// 		return (-1);
-
-// 	*result = new_result;
-// 	return (i + 2);
-// }
 
 //nowe
 int handle_special_var(char **result, int i)

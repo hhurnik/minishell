@@ -38,21 +38,6 @@ char	*read_quoted_content(char *input, int *i, t_quote quote, int *error)
 }
 
 
-// //moje
-// void	free_tokens(t_token *tokens)
-// {
-// 	t_token *tmp;
-
-// 	while (tokens)
-// 	{
-// 		tmp = tokens;
-// 		if (tokens->value)
-// 			free(tokens->value); // <<< Free the string!
-// 		tokens = tokens->next;
-// 		free(tmp);
-// 	}
-// }
-
 void free_tokens(t_token *tokens)
 {
     t_token *tmp;

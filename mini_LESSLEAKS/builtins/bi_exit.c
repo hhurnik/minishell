@@ -21,6 +21,7 @@ int	is_integer(char *str)
 	return (1);
 }
 
+// //moje
 int	parse_exit_args(char *argv[], int *exit_code)
 {
 	if (argv[1] && argv[2])
@@ -48,24 +49,27 @@ int	parse_exit_args(char *argv[], int *exit_code)
 	return (0); // Indicate success (should exit)
 }
 
-
 int bi_exit(char *argv[], t_resources *res)
 {
     int exit_code;
-    int should_exit;
+    int parse_error; // Use a clearer name
 
-    exit_code = g_exit_status;
+    exit_code = g_exit_status; // Default to last status
     ft_putstr_fd("exit\n", STDOUT_FILENO);
-    should_exit = parse_exit_args(argv, &exit_code);
-    if (should_exit == 1)
-	{
-        cleanup(res); // Ensure cleanup is called even on error
-        return (1);
+
+    parse_error = parse_exit_args(argv, &exit_code); // exit_code updated by parse_exit_args
+
+    if (parse_error == 1) // "too many arguments" or "numeric argument required"
+    {
+        // parse_exit_args already set the appropriate exit_code (1 or 2).
+         g_exit_status = exit_code; // Update global status for the shell
+        return (exit_code); // Return the error status (1 or 2)
     }
-		//return (1); //bylo tylko to powyej
-      
-    // Clean up all resources
-    cleanup(res); // This handles res->input, tokens, cmds, env
-	rl_clear_history(); // Clear readline history
-    exit(exit_code);
+
+    // If parse_exit_args returned 0, it means we SHOULD exit the shell.
+    // Clean up *everything* right before the final exit.
+    cleanup(res); // This frees input, tokens, cmds, AND ENV.
+    rl_clear_history();
+    exit(exit_code); // Exit the entire minishell process.
 }
+
