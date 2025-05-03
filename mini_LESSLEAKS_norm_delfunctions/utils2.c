@@ -129,35 +129,3 @@ char	*search_in_path_dirs(char *cmd, char **dirs)
 	}
 	return (NULL);
 }
-
-
-
-
-//nowy proba cleanup 2.05
-void cleanup_all_resources(t_resources *res, int *fds_to_close, int fd_count)
-{
-    int i;
-
-    // Clean up file descriptors
-    for (i = 0; i < fd_count; i++)
-    {
-        if (fds_to_close[i] >= 0)
-            close(fds_to_close[i]);
-    }
-
-    // Clean up allocated memory
-    if (res)
-    {
-        if (res->input)
-            free(res->input);
-        if (res->tokens)
-            free_tokens(res->tokens);
-        if (res->cmds)
-            free_cmds(res->cmds);
-        if (res->env)
-            free_env(res->env);
-    }
-
-    // Clear readline history
-    rl_clear_history();
-}

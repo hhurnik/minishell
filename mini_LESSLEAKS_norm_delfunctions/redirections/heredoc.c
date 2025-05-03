@@ -25,17 +25,6 @@ int create_heredoc_pipe(int pipe_fd[2])
 }
 
 
-
-
-void	process_heredoc_line(int write_fd, char *line)
-{
-	// Write to pipe (with newline)
-	write(write_fd, line, ft_strlen(line));
-	write(write_fd, "\n", 1);
-	free(line);
-}
-
-
 // //moje
 // int	handle_heredoc(const char *delimiter)
 // {
@@ -113,23 +102,6 @@ int handle_heredoc(char *delimiter)
         close(return_fd); // Close the read end as it's not needed/valid
         return (-1); // Return an error code
     }
-}
-
-int	handle_heredoc_redir(char *delimiter)
-{
-	int	fd;
-
-	fd = handle_heredoc(delimiter); // Call heredoc handler
-	if (fd < 0)
-		return (-1);
-	if (dup2(fd, STDIN_FILENO) < 0)
-	{
-		perror("dup2");
-		close(fd);
-		return (-1);
-	}
-	close(fd);
-	return (0);
 }
 
 ////////////koniec moje

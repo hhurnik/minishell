@@ -215,16 +215,10 @@ void	free_tokens(t_token *tokens);
 void	skip_space(int *i, char **word, t_token **tokens);
 void	handle_pipe(int *i, char **word, t_token **tokens);
 
-// int	handle_quoted(char *input, int *i, char **current_word, int *error);
-int	handle_quoted(char *input, int *i, t_token **tokens, int *error);
-
 void	append_char_to_word(char **word, char c);
 t_token	*handle_unexpected_quote(char *word, t_token *tokens);
 
 // lexer_utils4.c
-void	handle_redirect_token(char *input, int *i, char **word,
-		t_token **tokens);
-void	validate_redirection_syntax(t_token **tokens);
 void	handle_redirection(char *input, int *i, t_token **tokens);
 
 // main_utils.c
@@ -234,7 +228,6 @@ void	init_shell(char **envp, t_env **env);
 void	handle_eof(int exit_status);
 // void	process_input(char *input, t_env **env);
 void	process_input(char *input, t_env **env);
-void	clean_cmds_tokens_input(t_cmd *cmds, t_token *tokens, char *input);
 
 // parser_utils.c
 void	add_redir_to_cmd(t_cmd *cmd, t_redir *new_redir);
@@ -333,19 +326,14 @@ int	handle_append_redir(char *file);
 
 // heredoc.c
 int	create_heredoc_pipe(int pipe_fd[2]);
-void	process_heredoc_line(int write_fd, char *line);
-// int	handle_heredoc(const char *delimiter);
 int	handle_heredoc(char *delimiter);
 int	handle_heredoc2(t_redir *redir);
 
-int	handle_heredoc_redir(char *delimiter);
 void shift_empty_args(t_cmd *cmds);
 int handle_all_heredocs(t_cmd *cmds);
 void close_heredoc_fds(t_cmd *cmds);
 int create_heredoc_pipe(int pipe_fd[2]);
 
-// int handle_quoted_token(char *input, int *i, t_token **tokens, int *error);
-// int append_char_to_word(char **word, char c);
 
 
 /////DELETED CAUSE THEY WERE NOT USED
@@ -354,5 +342,18 @@ int create_heredoc_pipe(int pipe_fd[2]);
 // void	handle_input_char(char *input, int *i, char **current_word,
 // 	t_token **tokens); from lexec.c
 //handle_quote(char *input, int *i, t_token **tokens, int *error) (from lexer_utils2.c)
+//void	handle_redirect_token(char *input, int *i, char **word,
+//	t_token **tokens);   was only used in inadle_input_char
+//int	handle_quoted(char *input, int *i, t_token **tokens, 
+//     int *error); was only used in handle_input_char
+//void	validate_redirection_syntax(t_token **tokens); was not used anywhere
+//handle_quoted_token(char *input, int *i, t_token **tokens, int *error) (from main_utils.c section) -- not used anywhere
+// void	clean_cmds_tokens_input(t_cmd *cmds, t_token *tokens, char *input);
+//from main_utils.c - not used anywhere
+//cleanup_all_resources(t_resources *res, int *fds_to_close, int fd_count) (from utils2.c section)
+//was not usedanywhere
+//process_heredoc_line(int write_fd, char *line) (from heredoc.c)
+//not used anywhere
+//handle_heredoc_redir(char *delimiter) (from heredoc.c) not used anywhere
 
 #endif

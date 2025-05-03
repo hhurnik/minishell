@@ -1,44 +1,5 @@
 #include "inc/minishell.h"
 
-int	handle_quoted_token(char *input, int *i, t_token **tokens, int *error)
-{
-	t_quote			current_quote;
-	char			*quoted_content;
-	t_token_type	quote_type;
-
-	current_quote = get_quote_type(input[*i]);
-	(*i)++; // Move past the opening quote
-	// read_quoted_content reads *only* the inner content
-	quoted_content = read_quoted_content(input, i, current_quote, error);
-	if (*error || quoted_content == NULL) // Check error flag OR malloc failure
-	{
-		// read_quoted_content might set error but return NULL without msg
-		if (*error && quoted_content == NULL)
-		{
-			ft_putstr_fd("Minishell: syntax error: unclosed quote\n",
-				STDERR_FILENO);
-		}
-		else if (quoted_content == NULL)
-		{
-			// Malloc error likely
-			perror("minishell: malloc error in read_quoted_content");
-			*error = 1; // Ensure error is set
-		}
-		// Do not free quoted_content if it's NULL
-		// If *error is set but quoted_content is not NULL (shouldn't happen?),
-		//	free it.
-		if (quoted_content)
-			free(quoted_content);
-		return (1); // Indicate failure
-	}
-	// Determine token type based on the quote character used
-	quote_type = get_token_type_from_quote(current_quote);
-	// Add the token with the correct type and the *inner* content
-	add_token(tokens, quoted_content, quote_type);
-	free(quoted_content); // Free the temporary content string
-	// i is already advanced past the closing quote by read_quoted_content
-	return (0); // Indicate success
-}
 
 // //moje
 // void	free_env(t_env *env)
@@ -205,16 +166,6 @@ void	shift_empty_args(t_cmd *cmds)
 		}
 		current_cmd = current_cmd->next;
 	}
-}
-
-void	clean_cmds_tokens_input(t_cmd *cmds, t_token *tokens, char *input)
-{
-	if (cmds)
-		free_cmds(cmds);
-	if (tokens)
-		free_tokens(tokens);
-	if (input)
-		free(input);
 }
 
 static int	ensure_current_word(char **current_word)
