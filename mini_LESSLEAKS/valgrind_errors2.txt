@@ -1,0 +1,195 @@
+==24763== Memcheck, a memory error detector
+==24763== Copyright (C) 2002-2024, and GNU GPL'd, by Julian Seward et al.
+==24763== Using Valgrind-3.24.0 and LibVEX; rerun with -h for copyright info
+==24763== Command: ./minishell
+==24763== 
+==24764== 
+==24764== HEAP SUMMARY:
+==24764==     in use at exit: 208,598 bytes in 248 blocks
+==24764==   total heap usage: 694 allocs, 446 frees, 243,746 bytes allocated
+==24764== 
+==24764== 6 bytes in 3 blocks are still reachable in loss record 1 of 72
+==24764==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==24764==    by 0x10F591: ft_strdup (ft_strdup.c:23)
+==24764==    by 0x10B03D: add_token (lexer.c:12)
+==24764==    by 0x10C257: parse_input_loop (main_utils.c:548)
+==24764==    by 0x10C42D: tokenize_input (main_utils.c:597)
+==24764==    by 0x10BA7D: process_input (main_utils.c:308)
+==24764==    by 0x10B832: main (main.c:30)
+==24764== 
+==24764== 24 bytes in 1 blocks are still reachable in loss record 15 of 72
+==24764==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==24764==    by 0x10B026: add_token (lexer.c:9)
+==24764==    by 0x10C023: finalize_current_word (main_utils.c:490)
+==24764==    by 0x10C3D3: parse_input_loop (main_utils.c:583)
+==24764==    by 0x10C42D: tokenize_input (main_utils.c:597)
+==24764==    by 0x10BA7D: process_input (main_utils.c:308)
+==24764==    by 0x10B832: main (main.c:30)
+==24764== 
+==24764== 34 bytes in 8 blocks are still reachable in loss record 17 of 72
+==24764==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==24764==    by 0x10CEF8: ft_strjoin_char (utils.c:29)
+==24764==    by 0x10AB4F: expand_str (expander.c:266)
+==24764==    by 0x10A6BB: expand_variables (expander.c:33)
+==24764==    by 0x10BAB1: process_input (main_utils.c:315)
+==24764==    by 0x10B832: main (main.c:30)
+==24764== 
+==24764== 72 bytes in 3 blocks are still reachable in loss record 23 of 72
+==24764==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==24764==    by 0x10B026: add_token (lexer.c:9)
+==24764==    by 0x10C257: parse_input_loop (main_utils.c:548)
+==24764==    by 0x10C42D: tokenize_input (main_utils.c:597)
+==24764==    by 0x10BA7D: process_input (main_utils.c:308)
+==24764==    by 0x10B832: main (main.c:30)
+==24764== 
+==24764== 168 bytes in 7 blocks are still reachable in loss record 30 of 72
+==24764==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==24764==    by 0x10B026: add_token (lexer.c:9)
+==24764==    by 0x10C023: finalize_current_word (main_utils.c:490)
+==24764==    by 0x10C1E2: parse_input_loop (main_utils.c:539)
+==24764==    by 0x10C42D: tokenize_input (main_utils.c:597)
+==24764==    by 0x10BA7D: process_input (main_utils.c:308)
+==24764==    by 0x10B832: main (main.c:30)
+==24764== 
+==24764== LEAK SUMMARY:
+==24764==    definitely lost: 0 bytes in 0 blocks
+==24764==    indirectly lost: 0 bytes in 0 blocks
+==24764==      possibly lost: 0 bytes in 0 blocks
+==24764==    still reachable: 304 bytes in 22 blocks
+==24764==         suppressed: 208,294 bytes in 226 blocks
+==24764== 
+==24764== For lists of detected and suppressed errors, rerun with: -s
+==24764== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+==24763== Invalid read of size 8
+==24763==    at 0x10B96A: free_env (main_utils.c:49)
+==24763==    by 0x10A090: cleanup (executor.c:13)
+==24763==    by 0x10B7FB: main (main.c:23)
+==24763==  Address 0x4b180f8 is 24 bytes inside a block of size 32 free'd
+==24763==    at 0x484BB2C: free (vg_replace_malloc.c:989)
+==24763==    by 0x10B99C: free_env (main_utils.c:52)
+==24763==    by 0x10A090: cleanup (executor.c:13)
+==24763==    by 0x10BB93: process_input (main_utils.c:345)
+==24763==    by 0x10B832: main (main.c:30)
+==24763==  Block was alloc'd at
+==24763==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==24763==    by 0x1096B9: env_new (env_utils.c:17)
+==24763==    by 0x10AE71: handle_env_node_creation (init_env.c:21)
+==24763==    by 0x10AF88: process_single_env_var (init_env.c:51)
+==24763==    by 0x10AFE1: init_env (init_env.c:61)
+==24763==    by 0x10B9E6: init_shell (main_utils.c:61)
+==24763==    by 0x10B7B5: main (main.c:12)
+==24763== 
+==24763== Invalid read of size 8
+==24763==    at 0x10B976: free_env (main_utils.c:50)
+==24763==    by 0x10A090: cleanup (executor.c:13)
+==24763==    by 0x10B7FB: main (main.c:23)
+==24763==  Address 0x4b180e0 is 0 bytes inside a block of size 32 free'd
+==24763==    at 0x484BB2C: free (vg_replace_malloc.c:989)
+==24763==    by 0x10B99C: free_env (main_utils.c:52)
+==24763==    by 0x10A090: cleanup (executor.c:13)
+==24763==    by 0x10BB93: process_input (main_utils.c:345)
+==24763==    by 0x10B832: main (main.c:30)
+==24763==  Block was alloc'd at
+==24763==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==24763==    by 0x1096B9: env_new (env_utils.c:17)
+==24763==    by 0x10AE71: handle_env_node_creation (init_env.c:21)
+==24763==    by 0x10AF88: process_single_env_var (init_env.c:51)
+==24763==    by 0x10AFE1: init_env (init_env.c:61)
+==24763==    by 0x10B9E6: init_shell (main_utils.c:61)
+==24763==    by 0x10B7B5: main (main.c:12)
+==24763== 
+==24763== Invalid free() / delete / delete[] / realloc()
+==24763==    at 0x484BB2C: free (vg_replace_malloc.c:989)
+==24763==    by 0x10B980: free_env (main_utils.c:50)
+==24763==    by 0x10A090: cleanup (executor.c:13)
+==24763==    by 0x10B7FB: main (main.c:23)
+==24763==  Address 0x4b18140 is 0 bytes inside a block of size 6 free'd
+==24763==    at 0x484BB2C: free (vg_replace_malloc.c:989)
+==24763==    by 0x10B980: free_env (main_utils.c:50)
+==24763==    by 0x10A090: cleanup (executor.c:13)
+==24763==    by 0x10BB93: process_input (main_utils.c:345)
+==24763==    by 0x10B832: main (main.c:30)
+==24763==  Block was alloc'd at
+==24763==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==24763==    by 0x10F591: ft_strdup (ft_strdup.c:23)
+==24763==    by 0x1096DA: env_new (env_utils.c:21)
+==24763==    by 0x10AE71: handle_env_node_creation (init_env.c:21)
+==24763==    by 0x10AF88: process_single_env_var (init_env.c:51)
+==24763==    by 0x10AFE1: init_env (init_env.c:61)
+==24763==    by 0x10B9E6: init_shell (main_utils.c:61)
+==24763==    by 0x10B7B5: main (main.c:12)
+==24763== 
+==24763== Invalid read of size 8
+==24763==    at 0x10B985: free_env (main_utils.c:51)
+==24763==    by 0x10A090: cleanup (executor.c:13)
+==24763==    by 0x10B7FB: main (main.c:23)
+==24763==  Address 0x4b180e8 is 8 bytes inside a block of size 32 free'd
+==24763==    at 0x484BB2C: free (vg_replace_malloc.c:989)
+==24763==    by 0x10B99C: free_env (main_utils.c:52)
+==24763==    by 0x10A090: cleanup (executor.c:13)
+==24763==    by 0x10BB93: process_input (main_utils.c:345)
+==24763==    by 0x10B832: main (main.c:30)
+==24763==  Block was alloc'd at
+==24763==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==24763==    by 0x1096B9: env_new (env_utils.c:17)
+==24763==    by 0x10AE71: handle_env_node_creation (init_env.c:21)
+==24763==    by 0x10AF88: process_single_env_var (init_env.c:51)
+==24763==    by 0x10AFE1: init_env (init_env.c:61)
+==24763==    by 0x10B9E6: init_shell (main_utils.c:61)
+==24763==    by 0x10B7B5: main (main.c:12)
+==24763== 
+==24763== Invalid free() / delete / delete[] / realloc()
+==24763==    at 0x484BB2C: free (vg_replace_malloc.c:989)
+==24763==    by 0x10B990: free_env (main_utils.c:51)
+==24763==    by 0x10A090: cleanup (executor.c:13)
+==24763==    by 0x10B7FB: main (main.c:23)
+==24763==  Address 0x4b18190 is 0 bytes inside a block of size 10 free'd
+==24763==    at 0x484BB2C: free (vg_replace_malloc.c:989)
+==24763==    by 0x10B990: free_env (main_utils.c:51)
+==24763==    by 0x10A090: cleanup (executor.c:13)
+==24763==    by 0x10BB93: process_input (main_utils.c:345)
+==24763==    by 0x10B832: main (main.c:30)
+==24763==  Block was alloc'd at
+==24763==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==24763==    by 0x10F591: ft_strdup (ft_strdup.c:23)
+==24763==    by 0x109713: env_new (env_utils.c:29)
+==24763==    by 0x10AE71: handle_env_node_creation (init_env.c:21)
+==24763==    by 0x10AF88: process_single_env_var (init_env.c:51)
+==24763==    by 0x10AFE1: init_env (init_env.c:61)
+==24763==    by 0x10B9E6: init_shell (main_utils.c:61)
+==24763==    by 0x10B7B5: main (main.c:12)
+==24763== 
+==24763== Invalid free() / delete / delete[] / realloc()
+==24763==    at 0x484BB2C: free (vg_replace_malloc.c:989)
+==24763==    by 0x10B99C: free_env (main_utils.c:52)
+==24763==    by 0x10A090: cleanup (executor.c:13)
+==24763==    by 0x10B7FB: main (main.c:23)
+==24763==  Address 0x4b180e0 is 0 bytes inside a block of size 32 free'd
+==24763==    at 0x484BB2C: free (vg_replace_malloc.c:989)
+==24763==    by 0x10B99C: free_env (main_utils.c:52)
+==24763==    by 0x10A090: cleanup (executor.c:13)
+==24763==    by 0x10BB93: process_input (main_utils.c:345)
+==24763==    by 0x10B832: main (main.c:30)
+==24763==  Block was alloc'd at
+==24763==    at 0x484880F: malloc (vg_replace_malloc.c:446)
+==24763==    by 0x1096B9: env_new (env_utils.c:17)
+==24763==    by 0x10AE71: handle_env_node_creation (init_env.c:21)
+==24763==    by 0x10AF88: process_single_env_var (init_env.c:51)
+==24763==    by 0x10AFE1: init_env (init_env.c:61)
+==24763==    by 0x10B9E6: init_shell (main_utils.c:61)
+==24763==    by 0x10B7B5: main (main.c:12)
+==24763== 
+==24763== 
+==24763== HEAP SUMMARY:
+==24763==     in use at exit: 208,178 bytes in 222 blocks
+==24763==   total heap usage: 697 allocs, 562 frees, 243,778 bytes allocated
+==24763== 
+==24763== LEAK SUMMARY:
+==24763==    definitely lost: 0 bytes in 0 blocks
+==24763==    indirectly lost: 0 bytes in 0 blocks
+==24763==      possibly lost: 0 bytes in 0 blocks
+==24763==    still reachable: 0 bytes in 0 blocks
+==24763==         suppressed: 208,178 bytes in 222 blocks
+==24763== 
+==24763== For lists of detected and suppressed errors, rerun with: -s
+==24763== ERROR SUMMARY: 174 errors from 6 contexts (suppressed: 0 from 0)
