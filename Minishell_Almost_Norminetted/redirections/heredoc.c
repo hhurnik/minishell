@@ -1,14 +1,5 @@
 #include "../inc/minishell.h"
 
-// // Heredoc core functionality
-// bool read_until_delimiter(char *delimiter, int write_fd);
-// int handle_heredoc(char *delimiter);
-// int process_heredoc_redirection(t_redir *redir);
-// int handle_all_heredocs(t_cmd *cmds);
-// void close_heredoc_fds(t_cmd *cmds);
-
-/////podzielony handle_heredoc - read until delimeter and handle heredoc
-// brak leakow, tester dziala
 bool	read_until_delimiter(char *delimiter, int write_fd)
 {
 	char	*line;
@@ -19,7 +10,8 @@ bool	read_until_delimiter(char *delimiter, int write_fd)
 		if (!line)
 		{
 			ft_putstr_fd("minishell: warning: here-document "
-				"delimited by end-of-file (wanted `", STDERR_FILENO);
+				"delimited by end-of-file (wanted `",
+				STDERR_FILENO);
 			ft_putstr_fd(delimiter, STDERR_FILENO);
 			ft_putstr_fd("')\n", STDERR_FILENO);
 			return (false);

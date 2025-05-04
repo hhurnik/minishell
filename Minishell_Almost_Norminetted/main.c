@@ -1,6 +1,5 @@
 #include "inc/minishell.h"
 
-// nowe, podzielone
 static void	handle_no_input(t_env *env)
 {
 	t_resources	res;

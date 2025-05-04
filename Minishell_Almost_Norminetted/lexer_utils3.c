@@ -1,6 +1,5 @@
 #include "inc/minishell.h"
 
-
 void	skip_space(int *i, char **word, t_token **tokens)
 {
 	if (*word)

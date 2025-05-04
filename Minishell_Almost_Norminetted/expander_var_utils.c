@@ -17,7 +17,7 @@ int	is_standard_var(char *str, int i)
 
 char	*extract_var_name(char *str)
 {
-	int len;
+	int	len;
 
 	len = 0;
 	while (str[len] && (ft_isalnum(str[len]) || str[len] == '_'))
@@ -29,7 +29,7 @@ char	*extract_var_name(char *str)
 
 void	expand_variables(t_token *tokens, t_env *env)
 {
-	char *expanded;
+	char	*expanded;
 
 	while (tokens)
 	{

@@ -1,6 +1,5 @@
 #include "inc/minishell.h"
 
-
 // --- Your Parsing Logic (Modified) ---
 
 void	finalize_current_word(t_token **tokens, char **current_word,
@@ -26,7 +25,6 @@ void	handle_redirection(char *input, int *i, t_token **tokens)
 	first_char = input[*i];
 	op_str[0] = first_char;
 	(*i)++;
-
 	if (input[*i] == first_char)
 	{
 		op_str[1] = first_char;
@@ -55,24 +53,22 @@ void	parse_input_loop(char *input, t_parse_state *state)
 
 	input_state.input = input;
 	input_state.i = &state->i;
-
 	while (input[state->i] && !(state->error))
 	{
 		if (input[state->i] == '#' && (state->i == 0
 				|| ft_isspace(input[state->i - 1])))
 			break ;
-
 		if (ft_isspace(input[state->i]))
 		{
 			finalize_current_word(&state->tokens, &state->current_word,
-				state->single_quote_used);
+					state->single_quote_used);
 			state->single_quote_used = 0;
 			state->i++;
 		}
 		else if (is_pipe(input[state->i]))
 		{
 			finalize_current_word(&state->tokens, &state->current_word,
-				state->single_quote_used);
+					state->single_quote_used);
 			state->single_quote_used = 0;
 			add_token(&state->tokens, "|", T_PIPE);
 			state->i++;
@@ -80,7 +76,7 @@ void	parse_input_loop(char *input, t_parse_state *state)
 		else if (is_redirect(input[state->i]))
 		{
 			finalize_current_word(&state->tokens, &state->current_word,
-				state->single_quote_used);
+					state->single_quote_used);
 			state->single_quote_used = 0;
 			handle_redirection(input, &state->i, &state->tokens);
 		}
@@ -98,14 +94,12 @@ void	parse_input_loop(char *input, t_parse_state *state)
 			state->i++;
 		}
 	}
-
 	if (!state->error)
 	{
 		finalize_current_word(&state->tokens, &state->current_word,
-			state->single_quote_used);
+				state->single_quote_used);
 	}
 }
-
 
 t_token	*tokenize_input(char *input)
 {
@@ -117,9 +111,7 @@ t_token	*tokenize_input(char *input)
 	state.error = 0;
 	state.single_quote_used = 0;
 	state.current_quote = NO_QUOTE;
-
 	parse_input_loop(input, &state);
-
 	if (state.error)
 	{
 		if (state.current_word)
@@ -127,6 +119,5 @@ t_token	*tokenize_input(char *input)
 		free_tokens(state.tokens);
 		return (NULL);
 	}
-
 	return (reverse_tokens(state.tokens));
 }

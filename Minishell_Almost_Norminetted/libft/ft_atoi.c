@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ft_atoi.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mkrawczy <mkrawczy@student.42warsaw.pl>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/09 17:31:13 by mkrawczy          #+#    #+#             */
-/*   Updated: 2025/04/30 02:51:50 by marvin           ###   ########.fr       */
+/*   Updated: 2025/05/04 20:55:37 by mkrawczy         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,6 @@ int	ft_atoi(const char *str)
 		result = (result * 10) + (*str++ - 48);
 	return (n * result);
 }
-
 
 /*
 int	main(void)

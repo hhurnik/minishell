@@ -57,7 +57,6 @@ char	*get_env_value(const char *key, t_env *env)
 	return (var->value);
 }
 
-// dodaje new node to the end of a linked list of t_env nodes
 void	env_add_back(t_env **env, t_env *new_node)
 {
 	t_env	*last;

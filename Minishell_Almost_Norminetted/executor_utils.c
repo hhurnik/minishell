@@ -1,8 +1,7 @@
 #include "inc/minishell.h"
 
-int		g_exit_status = 0; // Globalna zmienna stanu
+int		g_exit_status = 0;
 
-// Count the number of nodes in the environment list
 int	count_env_nodes(t_env *env)
 {
 	int		count;
@@ -18,8 +17,6 @@ int	count_env_nodes(t_env *env)
 	return (count);
 }
 
-//Create a single "KEY=VALUE" string entry.
-//Returns the allocated string or NULL on error (malloc fail, NULL key/value).
 char	*create_env_entry(t_env *node)
 {
 	char	*key_eq;
@@ -37,8 +34,6 @@ char	*create_env_entry(t_env *node)
 	return (entry);
 }
 
-//Free the partially allocated array on error
-//Frees arr[0] up to arr[count-1], then frees arr itself
 void	free_array_on_error(char **arr, int count)
 {
 	int	i;
@@ -73,10 +68,6 @@ int	populate_env_array(t_env *env, char **arr)
 	return (i);
 }
 
-/*
- * Main Function: Converts the environment linked list to a NULL-terminated
- * array of strings ("KEY=VALUE"). Returns NULL on any error.
- */
 char	**env_to_arr(t_env *env)
 {
 	int		count;

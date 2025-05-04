@@ -27,7 +27,9 @@ int	extract_and_append_content(t_append_info *info, t_input_state *input_state,
 }
 
 int	prepare_and_execute_append(t_quote_indices *indices,
-		t_input_state *input_state, char **current_word, int *error)
+								t_input_state *input_state,
+								char **current_word,
+								int *error)
 {
 	int				len;
 	t_append_info	append_data;
@@ -79,7 +81,9 @@ int	find_and_update_for_quote(t_input_state *input_state, int *error,
 }
 
 int	append_and_advance_for_quote(t_input_state *input_state,
-		char **current_word, int *error, t_quote_indices *indices)
+									char **current_word,
+									int *error,
+									t_quote_indices *indices)
 {
 	if (prepare_and_execute_append(indices, input_state, current_word, error))
 		return (1);

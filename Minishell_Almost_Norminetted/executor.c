@@ -1,20 +1,5 @@
 #include "inc/minishell.h"
 
-void cleanup(t_resources *res)
-{
-    if (!res)
-		return;
-    if (res->input)
-        free(res->input);
-    if (res->tokens)
-        free_tokens(res->tokens);
-    if (res->cmds)
-        free_cmds(res->cmds);
-    if (res->env)
-        free_env(res->env);
-    rl_clear_history();
-}
-
 void	handle_signal_output(int status, int *printed_pipe_msg)
 {
 	int	sig;
@@ -43,7 +28,8 @@ void	handle_signal_output(int status, int *printed_pipe_msg)
 	}
 }
 
-void	process_child_status(pid_t pid, int status, pid_t last_pid, t_status_tracker *tracker)
+void	process_child_status(pid_t pid, int status, pid_t last_pid,
+		t_status_tracker *tracker)
 {
 	if (pid == last_pid)
 	{
@@ -55,17 +41,10 @@ void	process_child_status(pid_t pid, int status, pid_t last_pid, t_status_tracke
 	}
 }
 
-void	finalize_exit_status(pid_t last_pid, int found, int last_status)
-{
-	if (last_pid > 0 && found)
-		g_exit_status = last_status;
-}
-
-
 void	process_command(t_cmd *cmd, t_env **env, int prev_pipe_read,
 		int *pipe_fd)
 {
-	pid_t pid;
+	pid_t	pid;
 
 	pid = setup_pipe_and_fork(cmd, pipe_fd);
 	if (pid == 0)
@@ -97,12 +76,6 @@ int	init_execution(t_cmd *cmds, int *stdin_copy, int *stdout_copy)
 	return (1);
 }
 
-void	cleanup_execution(int stdin_copy, int stdout_copy)
-{
-	setup_signals_for_prompt();
-	restore_std_fds(stdin_copy, stdout_copy);
-}
-
 void	wait_for_children(pid_t last_cmd_pid)
 {
 	int					status;
@@ -113,13 +86,14 @@ void	wait_for_children(pid_t last_cmd_pid)
 	tracker.found = 0;
 	tracker.last_status = 0;
 	printed_pipe_msg = 0;
-	while ((pid = waitpid(-1, &status, 0)) > 0)
+	pid = waitpid(-1, &status, 0);
+	while (pid > 0)
 	{
 		process_child_status(pid, status, last_cmd_pid, &tracker);
 		handle_signal_output(status, &printed_pipe_msg);
+		pid = waitpid(-1, &status, 0);
 	}
 	finalize_exit_status(last_cmd_pid, tracker.found, tracker.last_status);
 	if (pid == -1 && errno != ECHILD)
 		perror("minishell: waitpid");
 }
-

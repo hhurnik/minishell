@@ -1,8 +1,8 @@
 #include "inc/minishell.h"
 
-static t_redir *create_redir(t_token *token)
+static t_redir	*create_redir(t_token *token)
 {
-	t_redir *new_redir;
+	t_redir	*new_redir;
 
 	new_redir = malloc(sizeof(t_redir));
 	if (!new_redir)
@@ -18,11 +18,11 @@ static t_redir *create_redir(t_token *token)
 
 static int	check_redir_syntax(t_token *token)
 {
-	if (!token || (token->type != T_WORD &&
-		token->type != T_SINGLE_QUOTED &&
-		token->type != T_DOUBLE_QUOTED))
+	if (!token || (token->type != T_WORD && token->type != T_SINGLE_QUOTED
+			&& token->type != T_DOUBLE_QUOTED))
 	{
-		ft_putstr_fd("minishell: syntax error near unexpected token\n", STDERR_FILENO);
+		ft_putstr_fd("minishell: syntax error near unexpected token\n",
+			STDERR_FILENO);
 		return (0);
 	}
 	return (1);
@@ -30,11 +30,11 @@ static int	check_redir_syntax(t_token *token)
 
 void	handle_redirection_parser(t_token **tokens, t_cmd *cmd)
 {
-	t_redir *redir;
+	t_redir	*redir;
 
 	redir = create_redir(*tokens);
 	if (!redir)
-		return;
+		return ;
 	*tokens = (*tokens)->next;
 	if (!check_redir_syntax(*tokens))
 		return (free(redir));

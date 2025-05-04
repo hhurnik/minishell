@@ -46,7 +46,7 @@ t_cmd	*cmd_last(t_cmd *cmds)
 	return (cmds);
 }
 
-// a pointer to a pointer allows the function to modify 
+// a pointer to a pointer allows the function to modify
 //the head of the list (first element)
 // used to add a new command (new_cmd) t the end of the list of commands.
 // appends a new t_cmd structure to the list,
