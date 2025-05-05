@@ -1,0 +1,64 @@
+---- OK FROM NORMINETTE, JUST REMOVE COMMENTS LATER -----
+---- NOT OKAY - LINES TOO LONG --------------------------
+
+1. builtin_handler.C                            ok
+2. env_utils.c                                  OK
+3. init_env.C                                   OK
+4. execution.c          	                    OK
+5. executor_utils.c                             OK
+6. executor.C			       	                OK
+7. expander.c
+    7.a handle_braced_variable.c                  ok, check on campus with tester 
+    7.b expand_str.c
+
+8. lexer.C                                      OK
+9. main.c                                       OK
+10. main_utils.C                                ok
+10a. process_input.c                            OK
+10b. main_utils2.c                              ok, podelone, check with tester on campus
+    10c. parse_input_loop (from main_utils2)    ok, check with tester on campus
+    10c. handle_quoted_append.C                 OK
+    10d. handle_quoted_append_utils.C           OK
+
+11. parser_utils.C                              ok
+12. parser_utils2.C                             OK
+13. parser.C				                    OK
+14. pipes.C                                     OK
+15. pipes_utils.C                               OK
+15. signals.C                                   OK
+16. utils.C                                     OK
+17. utils2.C                                    OK
+
+17. handle_braced_variable.c                    OK
+18. parser                                      OK
+19. 
+
+
+BUILTINS: wszystkie OK
+1. bi_cd.C
+2. bi_cd_utils.C
+3. bi_cd_special_case.C
+2. bi_echo.C
+3. bi_env.C
+4. bi_exit.C
+5. bi_export.C
+6. bi_pwd.C
+7. bi_unset.c
+
+REDIRECTIONS: WSZYSTKIE OK
+
+1. input_output_append.c
+2. heredoc.C
+3. redirs_execute.C
+
+
+HEADER:
+minishell.h
+
+
+
+
+
+
+NOTES:
+
