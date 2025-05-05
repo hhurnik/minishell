@@ -2,7 +2,6 @@ NAME = minishell
 CC = gcc
 CFLAGS = -g -Wall -Werror -Wextra
 CPPFLAGS = -Iinc -Ilibft/includes
-LDFLAGS =
 LDLIBS = -lreadline
 LIBFT_DIR = libft
 LIBFT = $(LIBFT_DIR)/libft.a
@@ -69,7 +68,7 @@ $(LIBFT):
 	@$(MAKE) -C $(LIBFT_DIR)
 
 $(NAME): $(LIBFT) $(OBJS)
-	$(CC) $(OBJS) $(LDFLAGS) $(LIBFT) $(LDLIBS) -o $(NAME)
+	$(CC) $(CFLAGS) $(OBJS)  $(LIBFT) $(LDLIBS) -o $(NAME)
 
 %.o: %.c inc/minishell.h
 	@mkdir -p $(@D)
